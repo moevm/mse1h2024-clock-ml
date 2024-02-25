@@ -1,0 +1,31 @@
+.toolbar {
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	align-items: end;
+	gap: 25px;
+	padding: 0;
+	margin: 10% 0 0 0;
+}
+
+.toolbar li {
+	cursor: pointer;
+}
+
+.active img {
+	border: 1px solid red;
+	border-radius: 10px 0 0 10px;
+}
+.size-selector label {
+	display: grid;
+	grid-template-rows: 2rem 130px;
+	grid-template-columns: auto;
+	justify-items: center;
+	font-size: 1.4rem;
+
+	margin-right: -40px;
+	z-index: 0;
+}
+.size-selector input {
+	transform: rotate(-90deg);
+}
