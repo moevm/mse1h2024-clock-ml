@@ -1,0 +1,9 @@
+.canvas {
+	width: 70vw;
+	height: 80vh;
+	border: 2px solid black;
+	border-radius: 20px;
+	background-color: white;
+	cursor: pointer;
+	z-index: 2;
+}

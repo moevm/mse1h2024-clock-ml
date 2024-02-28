@@ -1,0 +1,15 @@
+.banner {
+	border-radius: 24px;
+}
+.section {
+	position: relative;
+}
+.section::after {
+	position: absolute;
+	top: 10px;
+	left: 20px;
+	content: "Clock drawing test";
+	color: black;
+	height: 30px;
+	font-size: 2rem;
+}
