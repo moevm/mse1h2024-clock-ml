@@ -3,6 +3,8 @@ import importlib
 
 # import project modules
 # here will be import Estimator class in the future
+restAPIModule = importlib.import_module("backend-services.restapi.rest")
+# here will be import RabbitMQService class in the future
 
 
 class Core:
@@ -14,10 +16,21 @@ class Core:
     """
 
     def __init__(self) -> None:
-        pass
+        # Estimator class implemented for example
+        class EstimatorClass:
+            def __init__(self) -> None:
+                pass
 
-    def start():
-        pass
+            def estimate(self) -> str:
+                return f"estimation: ok"
+
+        self.__estimator = EstimatorClass()
+        self.__restAPIService = restAPIModule.RestAPIService(
+            estimator=self.__estimator,
+        )
+
+    def start(self) -> None:
+        self.__restAPIService.run()
 
 
 if __name__ == "__main__":
