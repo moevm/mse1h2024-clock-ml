@@ -3,6 +3,8 @@ package publisher
 import (
 	"context"
 
+	"backend/internal/rabbitmq"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -40,7 +42,7 @@ func (p *RabbitmqPublisher) PublishMessage(
 	)
 
 	if err != nil {
-		return err
+		return rabbitmq.ErrInvalidPublishing
 	}
 
 	return nil

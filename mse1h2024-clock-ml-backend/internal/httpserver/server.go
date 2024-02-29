@@ -9,6 +9,7 @@ import (
 
 	"backend/configs"
 	"backend/internal/rabbitmq/publisher"
+	"backend/internal/restapi"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -33,7 +34,7 @@ func (s *Server) Listen(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		shutdownCtx, cancel := context.WithTimeout(
-			context.Background(), 
+			context.Background(),
 			5*time.Second,
 		)
 		defer cancel()
@@ -52,7 +53,10 @@ func (s *Server) Listen(ctx context.Context) error {
 }
 
 // Creates a new Server instance.
-func NewServer(p publisher.RabbitmqPublisher) *Server {
+func NewServer(
+	p publisher.RabbitmqPublisher,
+	service restapi.RestapiService,
+) *Server {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -67,7 +71,7 @@ func NewServer(p publisher.RabbitmqPublisher) *Server {
 		},
 	}
 
-	SetRoutes(r, p)
+	SetRoutes(r, p, service)
 
 	return s
 }

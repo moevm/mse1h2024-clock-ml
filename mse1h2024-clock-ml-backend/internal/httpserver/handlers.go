@@ -1,29 +1,30 @@
 package httpserver
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
+	"backend/internal/rabbitmq"
 	"backend/internal/rabbitmq/publisher"
-	"backend/configs"
+	"backend/internal/restapi"
 )
 
 const (
 	paramName = "broker"
 	queueName = "estimation"
-) 
+)
 
 // Processes requests for sending pictures using amqp or rest, based on 'broker' queryParam.
 func SendPicture(
 	p publisher.RabbitmqPublisher,
+	s restapi.RestapiService,
 ) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		queryParams := r.URL.Query()
 		isBroker := queryParams.Get(paramName)
-		
+
 		isBrokerValue, err := strconv.ParseBool(isBroker)
 		if err != nil {
 			http.Error(
@@ -49,55 +50,49 @@ func SendPicture(
 			)
 			return
 		}
-		
+
 		if isBrokerValue {
 			err = p.PublishMessage(queueName, messageBody)
-			if err != nil {
-				return
-			}
 		} else {
-			sendRequestToEstimation(w, messageBody)
-			return
+			err = s.SendPictureRequest(messageBody)
 		}
 
-		w.WriteHeader(http.StatusOK)
+		handleError(w, err)
 	}
 }
 
-func sendRequestToEstimation(w http.ResponseWriter, payload []byte) {	
-	cfg, _ := configs.NewConfig()
-	url := fmt.Sprintf(
-		"http://%s:%d/process/estimation", 
-		cfg.EstimationParams.Host,
-		cfg.EstimationParams.Port,
-	)
+func decodeJSON(r *http.Request, v interface{}) error {
+	return json.NewDecoder(r.Body).Decode(v)
+}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(payload))
-	if err != nil {
+func handleError(w http.ResponseWriter, err error) {
+	switch err {
+	case restapi.ErrInvalidRequest:
 		http.Error(
 			w,
 			"invalid estimation request",
 			http.StatusBadRequest,
 		)
 		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
+	case restapi.ErrInvalidResponce:
 		http.Error(
 			w,
-			fmt.Sprintf(
-				"estimation service returned non-OK status: %d", 
-				resp.StatusCode,
-			),
+			"estimation service returned non-OK status",
 			http.StatusBadGateway,
 		)
-		return
+	case rabbitmq.ErrInvalidPublishing:
+		http.Error(
+			w,
+			fmt.Sprintf("invalid publishing in queue: %s", queueName),
+			http.StatusBadGateway,
+		)
+	case rabbitmq.ErrInvalidQueueDeclare:
+		http.Error(
+			w,
+			fmt.Sprintf("invalid declare queue: %s", queueName),
+			http.StatusInternalServerError,
+		)
+	default:
+		w.WriteHeader(http.StatusOK)
 	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func decodeJSON(r *http.Request, v interface{}) error {
-	return json.NewDecoder(r.Body).Decode(v)
 }

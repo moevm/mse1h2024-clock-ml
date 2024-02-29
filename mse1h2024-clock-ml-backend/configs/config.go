@@ -4,16 +4,11 @@ import (
 	"io"
 	"log"
 	"os"
-	"sync"
 
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	ConfigPath = os.Getenv("CFG_PATH")
-	once       sync.Once
-	instance   *Config
-)
+var configPath = os.Getenv("CFG_PATH")
 
 type Config struct {
 	AppInfo          App        `yaml:"app"`
@@ -40,34 +35,27 @@ type Estimation struct {
 	Host string `yaml:"host"`
 }
 
-// / NewConfig creates a singleton instance of the Config struct.
+// NewConfig creates a singleton instance of the Config struct.
 func NewConfig() (*Config, error) {
-	once.Do(func() {
-		file, err := os.Open(ConfigPath)
-		if err != nil {
-			log.Fatalf("Error opening YAML file: %v", err)
-			instance = nil
-			return
-		}
-		defer file.Close()
+	file, err := os.Open(configPath)
+	if err != nil {
+		log.Fatalf("Error opening YAML file: %v", err)
+		return nil, err
+	}
+	defer file.Close()
 
-		data, err := io.ReadAll(file)
-		if err != nil {
-			log.Fatalf("Error reading YAML file: %v", err)
-			instance = nil
-			return
-		}
+	data, err := io.ReadAll(file)
+	if err != nil {
+		log.Fatalf("Error reading YAML file: %v", err)
+		return nil, err
+	}
 
-		var cfg Config
-		err = yaml.Unmarshal(data, &cfg)
-		if err != nil {
-			log.Fatalf("Error unmarshalling YAML: %v", err)
-			instance = nil
-			return
-		}
+	var cfg Config
+	err = yaml.Unmarshal(data, &cfg)
+	if err != nil {
+		log.Fatalf("Error unmarshalling YAML: %v", err)
+		return nil, err
+	}
 
-		instance = &cfg
-	})
-
-	return instance, nil
+	return &cfg, nil
 }

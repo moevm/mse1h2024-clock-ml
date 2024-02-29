@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"backend/configs"
+	"backend/internal/restapi"
 	"backend/internal/httpserver"
 	"backend/internal/rabbitmq/publisher"
 )
@@ -24,7 +25,12 @@ func main() {
 	}
 	defer p.Close()
 
-	server := httpserver.NewServer(p)
+	s := restapi.NewRestapiService(
+		cfg.EstimationParams.Host, 
+		cfg.EstimationParams.Port,
+	)
+
+	server := httpserver.NewServer(p, s)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
