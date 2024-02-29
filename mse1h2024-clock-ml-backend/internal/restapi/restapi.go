@@ -10,13 +10,13 @@ type RestapiService struct {
 	Url string
 }
 
-// Send request with encoded picture to estimation 
+// Send request with encoded picture to estimation
 func (s *RestapiService) SendPictureRequest(
 	messageBody []byte,
 ) error {
 	resp, err := http.Post(s.Url, "application/json", bytes.NewBuffer(messageBody))
 	if err != nil {
-		return ErrInvalidRequest 
+		return ErrInvalidRequest
 	}
 	defer resp.Body.Close()
 
@@ -34,7 +34,7 @@ func NewRestapiService(host string, port int) RestapiService {
 		host,
 		port,
 	)
-	
+
 	return RestapiService{
 		Url: url,
 	}

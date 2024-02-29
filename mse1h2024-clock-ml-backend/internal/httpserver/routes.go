@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// Sets all server endpoints.
+// Sets all server endpoints
 func SetRoutes(
 	r *chi.Mux, 
 	p publisher.RabbitmqPublisher, 

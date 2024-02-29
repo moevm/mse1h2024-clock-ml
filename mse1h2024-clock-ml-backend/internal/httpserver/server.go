@@ -19,7 +19,7 @@ type Server struct {
 	*http.Server
 }
 
-// Starts the server, waits for its graceful shutdown or context cancellation.
+// Starts the server, waits for its graceful shutdown or context cancellation
 func (s *Server) Listen(ctx context.Context) error {
 	errorChan := make(chan error)
 
