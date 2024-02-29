@@ -74,7 +74,7 @@ func handleError(w http.ResponseWriter, err error) {
 			http.StatusBadRequest,
 		)
 		return
-	case restapi.ErrInvalidResponce:
+	case restapi.ErrInvalidResponse:
 		http.Error(
 			w,
 			"estimation service returned non-OK status",

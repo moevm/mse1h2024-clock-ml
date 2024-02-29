@@ -4,5 +4,5 @@ import "errors"
 
 var (
 	ErrInvalidRequest  = errors.New("invalid estimation request")
-	ErrInvalidResponce = errors.New("estimation service returned non-OK status")
+	ErrInvalidResponse = errors.New("estimation service returned non-OK status")
 )
