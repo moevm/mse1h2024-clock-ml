@@ -16,8 +16,11 @@ class Core:
     """
 
     def __init__(self) -> None:
-        # Estimator class implemented for example
+        """Initialization the core for ML-processing."""
+
         class EstimatorClass:
+            """Estimator class implemented for example"""
+
             def __init__(self) -> None:
                 pass
 
@@ -30,6 +33,8 @@ class Core:
         )
 
     def start(self) -> None:
+        """Run the REST-API service"""
+
         self.__restAPIService.run()
 
 
