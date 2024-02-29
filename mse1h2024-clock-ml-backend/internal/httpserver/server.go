@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	
 
 	"backend/configs"
 	"backend/internal/rabbitmq/publisher"
@@ -21,14 +22,14 @@ type Server struct {
 
 // Starts the server, waits for its graceful shutdown or context cancellation
 func (s *Server) Listen(ctx context.Context) error {
-	errorChan := make(chan error)
+	errChan := make(chan error)
 
 	defer func() {
-		close(errorChan)
+		close(errChan)
 	}()
 
 	go func() {
-		errorChan <- s.ListenAndServe()
+		errChan <- s.ListenAndServe()
 	}()
 
 	select {
@@ -44,7 +45,7 @@ func (s *Server) Listen(ctx context.Context) error {
 		}
 
 		return ctx.Err()
-	case err := <-errorChan:
+	case err := <-errChan:
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			return err
 		}
