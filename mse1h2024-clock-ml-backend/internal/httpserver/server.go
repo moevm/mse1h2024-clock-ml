@@ -3,9 +3,11 @@ package httpserver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
+	"backend/configs"
 	"backend/internal/rabbitmq/publisher"
 
 	"github.com/go-chi/chi/v5"
@@ -16,6 +18,7 @@ type Server struct {
 	*http.Server
 }
 
+// Starts the server, waits for its graceful shutdown or context cancellation.
 func (s *Server) Listen(ctx context.Context) error {
 	errorChan := make(chan error)
 
@@ -29,6 +32,16 @@ func (s *Server) Listen(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(
+			context.Background(), 
+			5*time.Second,
+		)
+		defer cancel()
+
+		if err := s.Shutdown(shutdownCtx); err != nil {
+			fmt.Printf("Error during server shutdown: %v\n", err)
+		}
+
 		return ctx.Err()
 	case err := <-errorChan:
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -38,24 +51,20 @@ func (s *Server) Listen(ctx context.Context) error {
 	}
 }
 
-func NewServer(addr string, p publisher.RabbitmqPublisher) *Server {
+// Creates a new Server instance.
+func NewServer(p publisher.RabbitmqPublisher) *Server {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	cfg, _ := configs.NewConfig()
+
 	s := &Server{
 		Server: &http.Server{
-			Addr:         addr,
-			Handler:      r,
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
-			IdleTimeout:  20 * time.Second,
+			Addr:    fmt.Sprintf(":%d", cfg.HttpParams.Port),
+			Handler: r,
 		},
-	}
-
-	if s.ReadTimeout+s.WriteTimeout > s.IdleTimeout {
-		panic("IdleTimeout must be set greater than the sum of ReadTimeout and WriteTimeout")
 	}
 
 	SetRoutes(r, p)

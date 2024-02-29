@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"backend/configs"
 	"backend/internal/httpserver"
@@ -16,15 +18,29 @@ func main() {
 		log.Fatalf("error while setting config: %v\n", err)
 	}
 
-	p, err := publisher.NewRabbitmqPublisher(cfg.RabbitUrl)
+	p, err := publisher.NewRabbitmqPublisher(cfg.RabbitParams.RabbitUrl)
 	if err != nil {
 		log.Fatalf("error while creating publisher: %v\n", err)
 	}
+	defer p.Close()
 
-	server := httpserver.NewServer(fmt.Sprintf(":%s", cfg.Port), p)
+	server := httpserver.NewServer(p)
 
-	ctx := context.Background()
-	if err := server.Listen(ctx); err != nil {
-		log.Fatalf("server error: %v\n", err)
-	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		if err := server.Listen(ctx); err != nil {
+			log.Fatalf("server error: %v\n", err)
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	sig := <-c
+	log.Printf("received %v signal\n", sig)
+	cancel()
+	
+	<-ctx.Done()
 }

@@ -11,7 +11,7 @@ type RabbitmqPublisher struct {
 	channel    *amqp.Channel
 }
 
-
+// Publishes a message to the specified RabbitMQ queue.
 func (p *RabbitmqPublisher) PublishMessage(
 	queueName string, messageBody []byte,
 ) error {
@@ -26,7 +26,7 @@ func (p *RabbitmqPublisher) PublishMessage(
 	if err != nil {
 		return err
 	}
-	
+
 	err = p.channel.PublishWithContext(
 		context.Background(),
 		"",
@@ -38,19 +38,21 @@ func (p *RabbitmqPublisher) PublishMessage(
 			Body:        messageBody,
 		},
 	)
-	
+
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
+// Closes the RabbitMQ connection and channel.
 func (p *RabbitmqPublisher) Close() {
 	p.connection.Close()
 	p.channel.Close()
 }
 
+// Creates a new RabbitmqPublisher instance.
 func NewRabbitmqPublisher(addr string) (RabbitmqPublisher, error) {
 	conn, err := amqp.Dial(addr)
 	if err != nil {

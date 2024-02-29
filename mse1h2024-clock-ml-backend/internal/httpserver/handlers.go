@@ -8,14 +8,21 @@ import (
 	"strconv"
 
 	"backend/internal/rabbitmq/publisher"
+	"backend/configs"
 )
 
+const (
+	paramName = "broker"
+	queueName = "estimation"
+) 
+
+// Processes requests for sending pictures using amqp or rest, based on 'broker' queryParam.
 func SendPicture(
 	p publisher.RabbitmqPublisher,
 ) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		queryParams := r.URL.Query()
-		isBroker := queryParams.Get("broker")
+		isBroker := queryParams.Get(paramName)
 		
 		isBrokerValue, err := strconv.ParseBool(isBroker)
 		if err != nil {
@@ -44,7 +51,7 @@ func SendPicture(
 		}
 		
 		if isBrokerValue {
-			err = p.PublishMessage("estimation", messageBody)
+			err = p.PublishMessage(queueName, messageBody)
 			if err != nil {
 				return
 			}
@@ -57,8 +64,13 @@ func SendPicture(
 	}
 }
 
-func sendRequestToEstimation(w http.ResponseWriter, payload []byte) {
-	url := "http://localhost:22869/process/estimation"
+func sendRequestToEstimation(w http.ResponseWriter, payload []byte) {	
+	cfg, _ := configs.NewConfig()
+	url := fmt.Sprintf(
+		"http://%s:%d/process/estimation", 
+		cfg.EstimationParams.Host,
+		cfg.EstimationParams.Port,
+	)
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(payload))
 	if err != nil {
@@ -74,7 +86,10 @@ func sendRequestToEstimation(w http.ResponseWriter, payload []byte) {
 	if resp.StatusCode != http.StatusOK {
 		http.Error(
 			w,
-			fmt.Sprintf("estimation service returned non-OK status: %d", resp.StatusCode),
+			fmt.Sprintf(
+				"estimation service returned non-OK status: %d", 
+				resp.StatusCode,
+			),
 			http.StatusBadGateway,
 		)
 		return
