@@ -47,6 +47,7 @@ export class CanvasAPI {
 	}
 	private onDrawEnd() {
 		this.isActive = false;
+		this.renderer.stop();
 	}
 	private onDraw(e: MouseEvent) {
 		if (!this.isActive) return;
