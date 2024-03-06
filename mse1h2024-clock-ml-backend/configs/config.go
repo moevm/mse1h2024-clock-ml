@@ -36,7 +36,7 @@ type Estimation struct {
 }
 
 // NewConfig creates a singleton instance of the Config struct.
-func NewConfig() (*Config, error) {
+func New() (*Config, error) {
 	file, err := os.Open(configPath)
 	if err != nil {
 		log.Fatalf("Error opening YAML file: %v", err)

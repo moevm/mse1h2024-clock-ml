@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	cfg, err := configs.NewConfig()
+	cfg, err := configs.New()
 	if err != nil {
 		log.Fatalf("error while setting config: %v\n", err)
 	}

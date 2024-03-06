@@ -12,18 +12,17 @@ import (
 )
 
 const (
-	paramName = "broker"
+	brokerQueryParam = "broker"
 	queueName = "estimation"
 )
 
-// Processes requests for sending pictures using amqp or rest, based on 'broker' queryParam.
+// SendPicture processes requests for sending pictures using amqp or rest, based on 'broker' queryParam.
 func SendPicture(
-	p publisher.RabbitmqPublisher,
-	s restapi.RestapiService,
+	publisher publisher.RabbitmqPublisher,
+	service restapi.RestapiService,
 ) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		queryParams := r.URL.Query()
-		isBroker := queryParams.Get(paramName)
+		isBroker := r.URL.Query().Get(brokerQueryParam)
 
 		isBrokerValue, err := strconv.ParseBool(isBroker)
 		if err != nil {
@@ -45,16 +44,16 @@ func SendPicture(
 		if err != nil {
 			http.Error(
 				w,
-				"Failed to marshal JSON",
+				"failed to marshal JSON",
 				http.StatusInternalServerError,
 			)
 			return
 		}
 
 		if isBrokerValue {
-			err = p.PublishMessage(queueName, messageBody)
+			err = publisher.PublishMessage(queueName, messageBody)
 		} else {
-			err = s.SendPictureRequest(messageBody)
+			err = service.SendPictureRequest(messageBody)
 		}
 
 		handleError(w, err)

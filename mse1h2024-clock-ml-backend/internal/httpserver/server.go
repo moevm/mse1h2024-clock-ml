@@ -63,7 +63,7 @@ func NewServer(
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	cfg, _ := configs.NewConfig()
+	cfg, _ := configs.New()
 
 	s := &Server{
 		Server: &http.Server{
