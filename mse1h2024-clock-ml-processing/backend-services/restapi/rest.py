@@ -42,7 +42,7 @@ class RestAPIService:
 
                 # result = self.__estimator.estimate(someParsedData) line will be implemented in the future
 
-                return flask.jsonify({"result": "Estimation processed successfully."})
+                return flask.jsonify({"result": 10})
             except Exception as e:
                 return flask.jsonify(
                     {"error": f"Internal server error: {str(e)}"},
