@@ -17,3 +17,7 @@ type Metadata struct {
 type ErrorResponse struct {
 	Message string `json:"message"`
 }
+
+type SuccessResponse struct {
+	Result int `json:"result"`
+}

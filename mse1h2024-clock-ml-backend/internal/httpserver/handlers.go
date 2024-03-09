@@ -10,7 +10,6 @@ import (
 	"strconv"
 )
 
-// todo test all
 const (
 	brokerQueryParam = "broker"
 	queueName        = "estimation"
@@ -61,6 +60,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			return
 		}
 
+		var result int
 		if isBroker {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rabbitmq")
 			err := rabbit.PublishMessage(r.Context(), queueName, body)
@@ -69,22 +69,23 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			}
 		} else {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rest")
-			err := rest.SendPictureRequest(r.Context(), body)
+			result, err = rest.SendPictureRequest(r.Context(), body)
 			if err != nil {
 				httpError(w, err.Error(), http.StatusInternalServerError)
 			}
 		}
 
 		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		err = json.NewEncoder(w).Encode(SuccessResponse{Result: result})
+		if err != nil {
+			logger.Log(r.Context(), slog.LevelError, "error during encoding response", slog.Any("error", err))
+		}
 	}
 }
 
 func httpError(w http.ResponseWriter, message string, code int) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(code)
-	err := json.NewEncoder(w).Encode(ErrorResponse{Message: message})
-	if err != nil {
-		return
-	}
+	_ = json.NewEncoder(w).Encode(ErrorResponse{Message: message})
 }
