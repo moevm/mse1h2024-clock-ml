@@ -66,12 +66,14 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			err := rabbit.PublishMessage(r.Context(), queueName, body)
 			if err != nil {
 				httpError(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
 		} else {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rest")
 			result, err = rest.SendPictureRequest(r.Context(), body)
 			if err != nil {
 				httpError(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
 		}
 
