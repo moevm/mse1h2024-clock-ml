@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"backend/internal/rabbitmq"
 	"context"
 	"errors"
 	"fmt"
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	"backend/internal/logger"
-	"backend/internal/rabbitmq/publisher"
 	"backend/internal/restapi"
 
 	"github.com/go-chi/chi/v5"
@@ -53,18 +53,11 @@ func (s *Server) Listen(ctx context.Context) error {
 	}
 }
 
-// NewServer creates a new Server instance.
-func NewServer(
-	log *logger.Logger,
-	publisher publisher.RabbitmqPublisher,
-	service restapi.Service,
-	port int,
-) *Server {
+// New creates a new Server instance.
+func New(log *logger.Logger, rabbit rabbitmq.Publisher, rest restapi.Service, port int) *Server {
 	router := chi.NewRouter()
 
-	logMiddleware := log.LoggerMiddleware()
-
-	router.Use(logMiddleware)
+	router.Use(log.LoggerMiddleware())
 	router.Use(middleware.Recoverer)
 
 	s := &Server{
@@ -74,7 +67,9 @@ func NewServer(
 		},
 	}
 
-	SetRoutes(router, publisher, service, log)
+	router.Route("/api/v1/", func(r chi.Router) {
+		SetRoutes(r, rabbit, rest)
+	})
 
 	return s
 }

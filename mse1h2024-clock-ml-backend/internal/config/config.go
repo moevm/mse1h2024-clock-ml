@@ -1,4 +1,4 @@
-package configs
+package config
 
 import (
 	"io"
@@ -8,13 +8,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var configPath = os.Getenv("CFG_PATH")
+const configEnv = "CFG_PATH"
 
 type Config struct {
-	AppInfo          App        `yaml:"app"`
-	HttpParams       HTTP       `yaml:"http"`
-	RabbitParams     RabbitMQ   `yaml:"rabbitmq"`
-	EstimationParams Estimation `yaml:"estimation"`
+	App    App      `yaml:"app"`
+	HTTP   HTTP     `yaml:"http"`
+	Rabbit RabbitMQ `yaml:"rabbitmq"`
+	REST   REST     `yaml:"estimation"`
 }
 
 type App struct {
@@ -27,17 +27,17 @@ type HTTP struct {
 }
 
 type RabbitMQ struct {
-	RabbitUrl string `yaml:"url"`
+	URL string `yaml:"url"`
 }
 
-type Estimation struct {
+type REST struct {
 	Port int    `yaml:"port"`
 	Host string `yaml:"host"`
 }
 
-// NewConfig creates a singleton instance of the Config struct.
+// New returns parsed yaml-file from path in env CFG_PATH.
 func New() (*Config, error) {
-	file, err := os.Open(configPath)
+	file, err := os.Open(os.Getenv(configEnv))
 	if err != nil {
 		log.Fatalf("Error opening YAML file: %v", err)
 		return nil, err

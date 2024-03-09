@@ -1,23 +1,21 @@
-package publisher
+package rabbitmq
 
 import (
+	"backend/internal/logger"
 	"context"
-
-	"backend/internal/rabbitmq"
+	"log/slog"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-// RabbitmqPublisher instance of rabbitmq.
-type RabbitmqPublisher struct {
+// Publisher instance of rabbitmq.
+type Publisher struct {
 	connection *amqp.Connection
 	channel    *amqp.Channel
 }
 
 // PublishMessage publishes a message to the specified rabbitmq queue.
-func (p *RabbitmqPublisher) PublishMessage(
-	queueName string, messageBody []byte,
-) error {
+func (p *Publisher) PublishMessage(ctx context.Context, queueName string, messageBody []byte) error {
 	_, err := p.channel.QueueDeclare(
 		queueName,
 		false,
@@ -31,7 +29,7 @@ func (p *RabbitmqPublisher) PublishMessage(
 	}
 
 	err = p.channel.PublishWithContext(
-		context.Background(),
+		ctx,
 		"",
 		queueName,
 		false,
@@ -43,31 +41,32 @@ func (p *RabbitmqPublisher) PublishMessage(
 	)
 
 	if err != nil {
-		return rabbitmq.ErrInvalidPublishing
+		logger.Log(ctx, slog.LevelInfo, "failed to publish message to rabbitmq", slog.Any("error", err))
+		return ErrInvalidPublishing
 	}
 
 	return nil
 }
 
 // Close closes the rabbitmq connection and channel.
-func (p *RabbitmqPublisher) Close() {
+func (p *Publisher) Close() {
 	p.connection.Close()
 	p.channel.Close()
 }
 
-// New creates a new RabbitmqPublisher instance.
-func New(addr string) (RabbitmqPublisher, error) {
+// New creates a new Publisher instance.
+func New(addr string) (Publisher, error) {
 	conn, err := amqp.Dial(addr)
 	if err != nil {
-		return RabbitmqPublisher{}, err
+		return Publisher{}, err
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return RabbitmqPublisher{}, err
+		return Publisher{}, err
 	}
 
-	return RabbitmqPublisher{
+	return Publisher{
 		connection: conn,
 		channel:    ch,
 	}, nil

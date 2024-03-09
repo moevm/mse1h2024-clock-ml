@@ -1,90 +1,90 @@
 package httpserver
 
 import (
+	"backend/internal/logger"
+	"backend/internal/rabbitmq"
+	"backend/internal/restapi"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
-
-	"backend/internal/logger"
-	"backend/internal/rabbitmq/publisher"
-	"backend/internal/restapi"
 )
-//todo test all
-//todo add all doc
+
+// todo test all
 const (
 	brokerQueryParam = "broker"
 	queueName        = "estimation"
 )
 
-type Handlers struct {
-	publisher publisher.RabbitmqPublisher
-	service   restapi.Service
-	log       *logger.Logger
-}
-
-func NewHandlers(
-	rabbirPublisher publisher.RabbitmqPublisher,
-	apiService restapi.Service,
-	logger *logger.Logger,
-) Handlers {
-	return Handlers{
-		publisher: rabbirPublisher,
-		service:   apiService,
-		log:       logger,
-	}
-}
-
 // SendPicture processes requests for sending pictures using AMQP or REST, based on 'broker' queryParam.
-func (handlers *Handlers) SendPicture() func(w http.ResponseWriter, r *http.Request) {
+func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		isBroker, err := strconv.ParseBool(r.URL.Query().Get(brokerQueryParam))
 		if err != nil {
-			handleError(handlers.log, w, "Failed to parse 'broker' query parameter", http.StatusInternalServerError)
+			logger.Log(
+				r.Context(), slog.LevelError,
+				"failed to parse 'broker' query parameter",
+				slog.Any("error", err),
+			)
+			httpError(w, "invalid broker argument", http.StatusBadRequest)
+			return
+		}
+
+		var body []byte
+		_, err = r.Body.Read(body)
+		if err != nil {
+			logger.Log(
+				r.Context(),
+				slog.LevelError,
+				"failed to read request body",
+				slog.Any("error", err),
+			)
+			httpError(w, "invalid body of request", http.StatusBadRequest)
 			return
 		}
 
 		var imageRequest ImageRequest
-		if err := handlers.decodeJSON(r, &imageRequest); err != nil {
-			handleError(handlers.log, w, "Failed to decode JSON", http.StatusInternalServerError)
+		if err = json.NewDecoder(r.Body).Decode(&imageRequest); err != nil {
+			logger.Log(
+				r.Context(),
+				slog.LevelError,
+				"failed to parse JSON from body",
+				slog.Any("error", err),
+			)
+			httpError(w, "invalid JSON body", http.StatusBadRequest)
 			return
 		}
 
-		messageBody, err := json.Marshal(imageRequest)
-		if err != nil {
-			handleError(handlers.log, w, "Failed to marshal JSON", http.StatusInternalServerError)
+		if imageRequest.Metadata.Width == 0 || imageRequest.Metadata.Height == 0 {
+			logger.Log(r.Context(), slog.LevelInfo, "invalid image size")
+			httpError(w, "invalid image size", http.StatusBadRequest)
 			return
 		}
 
-		var sendFunc func() error
 		if isBroker {
-			sendFunc = func() error {
-				return handlers.publisher.PublishMessage(queueName, messageBody)
+			logger.Log(r.Context(), slog.LevelInfo, "sending image using rabbitmq")
+			err := rabbit.PublishMessage(r.Context(), queueName, body)
+			if err != nil {
+				httpError(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
-			sendFunc = func() error {
-				return handlers.service.SendPictureRequest(messageBody)
+			logger.Log(r.Context(), slog.LevelInfo, "sending image using rest")
+			err := rest.SendPictureRequest(r.Context(), body)
+			if err != nil {
+				httpError(w, err.Error(), http.StatusInternalServerError)
 			}
-		}
-
-		if err := sendFunc(); err != nil {
-			handleError(
-				handlers.log,
-				w,
-				"Failed to send picture request",
-				http.StatusInternalServerError,
-			)
-			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func (handlers *Handlers) decodeJSON(r *http.Request, v interface{}) error {
-	return json.NewDecoder(r.Body).Decode(v)
-}
-
-func handleError(log *logger.Logger, w http.ResponseWriter, errorMessage string, statusCode int) {
-	log.Error(errorMessage)
-	http.Error(w, "internal server error", statusCode)
+func httpError(w http.ResponseWriter, message string, code int) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(code)
+	err := json.NewEncoder(w).Encode(ErrorResponse{Message: message})
+	if err != nil {
+		return
+	}
 }

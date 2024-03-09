@@ -4,10 +4,10 @@ import "errors"
 
 var (
 	ErrInvalidRequest  = errors.New("invalid estimation request")
-	ErrInvalidResponse = errors.New("estimation service returned non-OK status")
+	ErrInvalidResponse = errors.New("estimation service returned invalid response")
 )
 
-type Reponse struct {
-	Message 	 string `json:"result"`
-    ErrorMessage string `json:"error,omitempty"`
+type Response struct {
+	Message string `json:"result"`
+	Error   string `json:"error,omitempty"`
 }

@@ -1,39 +1,39 @@
 package main
 
 import (
+	"backend/internal/config"
+	"backend/internal/rabbitmq"
 	"context"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"backend/configs"
 	"backend/internal/httpserver"
 	"backend/internal/logger"
-	"backend/internal/rabbitmq/publisher"
 	"backend/internal/restapi"
 )
 
 func main() {
 	log := logger.New(slog.LevelDebug)
 
-	cfg, err := configs.New()
+	cfg, err := config.New()
 	if err != nil {
 		log.Error("error while setting config: %v\n", err)
 	}
 
-	publisher, err := publisher.New(cfg.RabbitParams.RabbitUrl)
+	publisher, err := rabbitmq.New(cfg.Rabbit.URL)
 	if err != nil {
 		log.Error("error while creating publisher: %v\n", err)
 	}
 	defer publisher.Close()
 
 	service := restapi.New(
-		cfg.EstimationParams.Host, 
-		cfg.EstimationParams.Port,
+		cfg.REST.Host,
+		cfg.REST.Port,
 	)
 
-	server := httpserver.NewServer(log, publisher, service, cfg.HttpParams.Port)
+	server := httpserver.New(log, publisher, service, cfg.HTTP.Port)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -50,6 +50,6 @@ func main() {
 	sig := <-c
 	log.Info("received %v signal\n", sig)
 	cancel()
-	
+
 	<-ctx.Done()
 }
