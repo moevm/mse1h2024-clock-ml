@@ -9,7 +9,8 @@ import (
 	"backend/internal/rabbitmq/publisher"
 	"backend/internal/restapi"
 )
-
+//todo test all
+//todo add all doc
 const (
 	brokerQueryParam = "broker"
 	queueName        = "estimation"

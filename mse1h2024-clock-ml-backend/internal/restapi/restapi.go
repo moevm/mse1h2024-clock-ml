@@ -3,10 +3,8 @@ package restapi
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -14,7 +12,7 @@ type Service struct {
 	Url string
 }
 
-// Send request with encoded picture to estimation
+// SendPictureRequest sends request with encoded picture to estimation
 func (s *Service) SendPictureRequest(
 	messageBody []byte,
 ) error {
@@ -25,10 +23,7 @@ func (s *Service) SendPictureRequest(
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		if err := handleErrorResponce(resp.Body); err != nil {
-			log.Printf("handle response error: %v", err)
-		}
-		return ErrInvalidResponse
+		return handleErrorResponce(resp.Body)
 	}
 
 	return nil
@@ -40,18 +35,17 @@ func handleErrorResponce(body io.ReadCloser) error {
 		return err
 	}
 
-	var errorMap map[string]interface{}
-	err = json.Unmarshal(respData, &errorMap)
+	var response Reponse
+	err = json.Unmarshal(respData, &response)
 	if err != nil {
 		return err
 	}
 
-	if errMessage, ok := errorMap["error"].(string); ok {
-		log.Printf("response error: %s", errMessage)
-		return nil
+	if response.ErrorMessage != "" {
+		return fmt.Errorf("response error: %s", response.ErrorMessage)
 	}
 
-	return errors.New("error while unmarshaling JSON response")
+	return nil
 }
 
 // New creates a new Service instance.
