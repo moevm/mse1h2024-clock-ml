@@ -8,12 +8,13 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+// RabbitmqPublisher instance of rabbitmq.
 type RabbitmqPublisher struct {
 	connection *amqp.Connection
 	channel    *amqp.Channel
 }
 
-// Publishes a message to the specified RabbitMQ queue.
+// PublishMessage publishes a message to the specified rabbitmq queue.
 func (p *RabbitmqPublisher) PublishMessage(
 	queueName string, messageBody []byte,
 ) error {
@@ -48,14 +49,14 @@ func (p *RabbitmqPublisher) PublishMessage(
 	return nil
 }
 
-// Closes the RabbitMQ connection and channel.
+// Close closes the rabbitmq connection and channel.
 func (p *RabbitmqPublisher) Close() {
 	p.connection.Close()
 	p.channel.Close()
 }
 
-// Creates a new RabbitmqPublisher instance.
-func NewRabbitmqPublisher(addr string) (RabbitmqPublisher, error) {
+// New creates a new RabbitmqPublisher instance.
+func New(addr string) (RabbitmqPublisher, error) {
 	conn, err := amqp.Dial(addr)
 	if err != nil {
 		return RabbitmqPublisher{}, err

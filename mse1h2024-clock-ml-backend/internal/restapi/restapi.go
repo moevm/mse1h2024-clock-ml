@@ -10,12 +10,12 @@ import (
 	"net/http"
 )
 
-type RestapiService struct {
+type Service struct {
 	Url string
 }
 
 // Send request with encoded picture to estimation
-func (s *RestapiService) SendPictureRequest(
+func (s *Service) SendPictureRequest(
 	messageBody []byte,
 ) error {
 	resp, err := http.Post(s.Url, "application/json", bytes.NewBuffer(messageBody))
@@ -24,7 +24,7 @@ func (s *RestapiService) SendPictureRequest(
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK { 
+	if resp.StatusCode != http.StatusOK {
 		if err := handleErrorResponce(resp.Body); err != nil {
 			log.Printf("handle response error: %v", err)
 		}
@@ -54,15 +54,15 @@ func handleErrorResponce(body io.ReadCloser) error {
 	return errors.New("error while unmarshaling JSON response")
 }
 
-// Creates a new RestapiService instance.
-func NewRestapiService(host string, port int) RestapiService {
+// New creates a new Service instance.
+func New(host string, port int) Service {
 	url := fmt.Sprintf(
 		"http://%s:%d/process/estimation",
 		host,
 		port,
 	)
 
-	return RestapiService{
+	return Service{
 		Url: url,
 	}
 }

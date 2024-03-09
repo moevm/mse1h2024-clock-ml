@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"backend/internal/logger"
 	"backend/internal/rabbitmq/publisher"
 	"backend/internal/restapi"
 
@@ -9,11 +10,14 @@ import (
 
 // SetRoutes sets all server endpoints
 func SetRoutes(
-	r *chi.Mux,
-	p publisher.RabbitmqPublisher,
-	s restapi.RestapiService,
+	router *chi.Mux,
+	publisher publisher.RabbitmqPublisher,
+	service restapi.Service,
+	logger *logger.Logger,
 ) {
-	r.Route("/process", func(apiRoute chi.Router) {
-		apiRoute.Post("/sendPicture", SendPicture(p, s))
+	handlers := NewHandlers(publisher, service, logger)
+
+	router.Route("/process", func(apiRoute chi.Router) {
+		apiRoute.Post("/sendPicture", handlers.SendPicture())
 	})
 }

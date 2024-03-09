@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	
 
-	"backend/configs"
+	"backend/internal/logger"
 	"backend/internal/rabbitmq/publisher"
 	"backend/internal/restapi"
 
@@ -18,9 +17,10 @@ import (
 
 type Server struct {
 	*http.Server
+	log *logger.Logger
 }
 
-// Starts the server, waits for its graceful shutdown or context cancellation
+// Listen starts the server, waits for its graceful shutdown or context cancellation
 func (s *Server) Listen(ctx context.Context) error {
 	errChan := make(chan error)
 
@@ -41,7 +41,7 @@ func (s *Server) Listen(ctx context.Context) error {
 		defer cancel()
 
 		if err := s.Shutdown(shutdownCtx); err != nil {
-			fmt.Printf("Error during server shutdown: %v\n", err)
+			s.log.Error("Error during server shutdown: %v\n", err)
 		}
 
 		return ctx.Err()
@@ -53,26 +53,28 @@ func (s *Server) Listen(ctx context.Context) error {
 	}
 }
 
-// Creates a new Server instance.
+// NewServer creates a new Server instance.
 func NewServer(
-	p publisher.RabbitmqPublisher,
-	service restapi.RestapiService,
+	log *logger.Logger,
+	publisher publisher.RabbitmqPublisher,
+	service restapi.Service,
+	port int,
 ) *Server {
-	r := chi.NewRouter()
+	router := chi.NewRouter()
 
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	logMiddleware := log.LoggerMiddleware()
 
-	cfg, _ := configs.New()
+	router.Use(logMiddleware)
+	router.Use(middleware.Recoverer)
 
 	s := &Server{
 		Server: &http.Server{
-			Addr:    fmt.Sprintf(":%d", cfg.HttpParams.Port),
-			Handler: r,
+			Addr:    fmt.Sprintf(":%d", port),
+			Handler: router,
 		},
 	}
 
-	SetRoutes(r, p, service)
+	SetRoutes(router, publisher, service, log)
 
 	return s
 }

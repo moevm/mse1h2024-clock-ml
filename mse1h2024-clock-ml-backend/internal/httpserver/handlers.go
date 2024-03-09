@@ -2,96 +2,88 @@ package httpserver
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
-	"backend/internal/rabbitmq"
+	"backend/internal/logger"
 	"backend/internal/rabbitmq/publisher"
 	"backend/internal/restapi"
 )
 
 const (
 	brokerQueryParam = "broker"
-	queueName = "estimation"
+	queueName        = "estimation"
 )
 
-// SendPicture processes requests for sending pictures using amqp or rest, based on 'broker' queryParam.
-func SendPicture(
-	publisher publisher.RabbitmqPublisher,
-	service restapi.RestapiService,
-) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		isBroker := r.URL.Query().Get(brokerQueryParam)
+type Handlers struct {
+	publisher publisher.RabbitmqPublisher
+	service   restapi.Service
+	log       *logger.Logger
+}
 
-		isBrokerValue, err := strconv.ParseBool(isBroker)
+func NewHandlers(
+	rabbirPublisher publisher.RabbitmqPublisher,
+	apiService restapi.Service,
+	logger *logger.Logger,
+) Handlers {
+	return Handlers{
+		publisher: rabbirPublisher,
+		service:   apiService,
+		log:       logger,
+	}
+}
+
+// SendPicture processes requests for sending pictures using AMQP or REST, based on 'broker' queryParam.
+func (handlers *Handlers) SendPicture() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		isBroker, err := strconv.ParseBool(r.URL.Query().Get(brokerQueryParam))
 		if err != nil {
-			http.Error(
-				w,
-				"invalid broker boolean parameter",
-				http.StatusBadRequest,
-			)
+			handleError(handlers.log, w, "Failed to parse 'broker' query parameter", http.StatusInternalServerError)
 			return
 		}
 
 		var imageRequest ImageRequest
-		if err := decodeJSON(r, &imageRequest); err != nil {
-			http.Error(w, "invalid JSON format", http.StatusBadRequest)
+		if err := handlers.decodeJSON(r, &imageRequest); err != nil {
+			handleError(handlers.log, w, "Failed to decode JSON", http.StatusInternalServerError)
 			return
 		}
 
 		messageBody, err := json.Marshal(imageRequest)
 		if err != nil {
-			http.Error(
+			handleError(handlers.log, w, "Failed to marshal JSON", http.StatusInternalServerError)
+			return
+		}
+
+		var sendFunc func() error
+		if isBroker {
+			sendFunc = func() error {
+				return handlers.publisher.PublishMessage(queueName, messageBody)
+			}
+		} else {
+			sendFunc = func() error {
+				return handlers.service.SendPictureRequest(messageBody)
+			}
+		}
+
+		if err := sendFunc(); err != nil {
+			handleError(
+				handlers.log,
 				w,
-				"failed to marshal JSON",
+				"Failed to send picture request",
 				http.StatusInternalServerError,
 			)
 			return
 		}
 
-		if isBrokerValue {
-			err = publisher.PublishMessage(queueName, messageBody)
-		} else {
-			err = service.SendPictureRequest(messageBody)
-		}
-
-		handleError(w, err)
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func decodeJSON(r *http.Request, v interface{}) error {
+func (handlers *Handlers) decodeJSON(r *http.Request, v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }
 
-func handleError(w http.ResponseWriter, err error) {
-	switch err {
-	case restapi.ErrInvalidRequest:
-		http.Error(
-			w,
-			"invalid estimation request",
-			http.StatusBadRequest,
-		)
-		return
-	case restapi.ErrInvalidResponse:
-		http.Error(
-			w,
-			"estimation service returned non-OK status",
-			http.StatusBadGateway,
-		)
-	case rabbitmq.ErrInvalidPublishing:
-		http.Error(
-			w,
-			fmt.Sprintf("invalid publishing in queue: %s", queueName),
-			http.StatusBadGateway,
-		)
-	case rabbitmq.ErrInvalidQueueDeclare:
-		http.Error(
-			w,
-			fmt.Sprintf("invalid declare queue: %s", queueName),
-			http.StatusInternalServerError,
-		)
-	default:
-		w.WriteHeader(http.StatusOK)
-	}
+func handleError(log *logger.Logger, w http.ResponseWriter, errorMessage string, statusCode int) {
+	log.Error(errorMessage)
+	http.Error(w, "internal server error", statusCode)
 }
