@@ -58,7 +58,7 @@ class DigitsPositionExtractor:
         return recognition
 
     def __show_boundaries(self, boundaries: list[list[int]]):
-        image_with_boxes = self.__image
+        image_with_boxes = self.__image.clone()
         # Loop through recognized results
         for detection in boundaries:
             # Retrieving bounding box coordinates
@@ -74,7 +74,7 @@ class DigitsPositionExtractor:
         cv2.destroyAllWindows()
 
     def __show_recognition(self, recognition: list[tuple[list[list[int]], str, int]]):
-        image_with_recognize_and_boxes = self.__image
+        image_with_recognize_and_boxes = self.__image.clone()
         # Loop through recognized results
         for detection in recognition:
             # Extract bounding box coordinates and recognized text
@@ -96,6 +96,7 @@ class DigitsPositionExtractor:
 
 
 if __name__ == "__main__":
+    # File testing
     dpe = DigitsPositionExtractor(cv2.imread("t1.png"))
     result = dpe.get_recognition()
     print(*result, sep='\n')
