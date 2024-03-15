@@ -57,6 +57,27 @@ class DigitsPositionExtractor:
         self.__show_recognition(recognition=recognition)
         return recognition
 
+    def get_image_without_digits(self, boundaries: list[list[int]]):
+        """
+            This method implements the removal of digits along recognized boundaries by painting areas containing
+            digits with white color
+        """
+
+        image_without_digits = self.__image.copy()
+        # Loop through recognized results
+        for detection in boundaries:
+            # Retrieving bounding box coordinates
+            top_left = tuple(map(int, [detection[0], detection[2]]))
+            bottom_right = tuple(map(int, [detection[1], detection[3]]))
+
+            # Drawing the white box instead of digit
+            image_without_digits = cv2.rectangle(image_without_digits, top_left, bottom_right, (255, 255, 255), -1)
+
+        # Display an image without digits
+        self.__display_image("Clear", image_without_digits)
+
+        return image_without_digits
+
     def __show_boundaries(self, boundaries: list[list[int]]):
         """
             This method creates a new image based on the original one, draws the boundaries of the found digits on it,
