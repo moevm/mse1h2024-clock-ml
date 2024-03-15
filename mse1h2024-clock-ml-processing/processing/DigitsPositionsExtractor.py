@@ -74,9 +74,7 @@ class DigitsPositionExtractor:
             image_with_boxes = cv2.rectangle(image_with_boxes, top_left, bottom_right, (0, 255, 0), 2)
 
         # Display an image with bounding boxes
-        cv2.imshow("Boxes", image_with_boxes)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        self.__display_image("Boxes", image_with_boxes)
 
     def __show_recognition(self, recognition: list[tuple[list[list[int]], str, int]]):
         """
@@ -100,7 +98,15 @@ class DigitsPositionExtractor:
             )
 
         # Displaying an image with bounding boxes and recognized numbers
-        cv2.imshow("Recognize", image_with_recognize_and_boxes)
+        self.__display_image("Recognize", image_with_recognize_and_boxes)
+
+    @staticmethod
+    def __display_image(title: str, image: any):
+        """
+            This method displays the image on the screen
+        """
+
+        cv2.imshow(title, image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
