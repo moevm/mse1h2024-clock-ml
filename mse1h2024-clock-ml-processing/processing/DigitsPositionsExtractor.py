@@ -58,6 +58,11 @@ class DigitsPositionExtractor:
         return recognition
 
     def __show_boundaries(self, boundaries: list[list[int]]):
+        """
+            This method creates a new image based on the original one, draws the boundaries of the found digits on it,
+            and displays the image on the screen
+        """
+
         image_with_boxes = self.__image.clone()
         # Loop through recognized results
         for detection in boundaries:
@@ -74,6 +79,11 @@ class DigitsPositionExtractor:
         cv2.destroyAllWindows()
 
     def __show_recognition(self, recognition: list[tuple[list[list[int]], str, int]]):
+        """
+            This method creates a new image based on the original one, draws the boundaries of the found numbers
+            and their recognition on it, and then displays the image on the screen
+        """
+
         image_with_recognize_and_boxes = self.__image.clone()
         # Loop through recognized results
         for detection in recognition:
