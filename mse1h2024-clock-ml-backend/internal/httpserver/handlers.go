@@ -5,6 +5,7 @@ import (
 	"backend/internal/rabbitmq"
 	"backend/internal/restapi"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -29,8 +30,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			return
 		}
 
-		var body []byte
-		_, err = r.Body.Read(body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			logger.Log(
 				r.Context(),
@@ -43,7 +43,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 		}
 
 		var imageRequest ImageRequest
-		if err = json.NewDecoder(r.Body).Decode(&imageRequest); err != nil {
+		if err = json.Unmarshal(body, &imageRequest); err != nil {
 			logger.Log(
 				r.Context(),
 				slog.LevelError,
