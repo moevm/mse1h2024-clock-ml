@@ -16,10 +16,10 @@ class ClockDigitsExtractor:
         # Initialize an easyocr.Reader object with GPU permission
         self.__reader = easyocr.Reader(["en"], gpu=True)
 
-    def extract_boundaries(self, image: np.array) -> list[list[int]]:
+    def extract_boundaries(self, image: np.array) -> list[list[int, int, int, int]] | None:
         """
         This method returns the boundaries of recognized numbers in the image.
-        The format is [x_min, x_max, y_min, y_max].
+        The boundaries is represented by a list in the following format: [[x_min, x_max, y_min, y_max]]
         
         Parameters
         ----------
@@ -39,9 +39,10 @@ class ClockDigitsExtractor:
 
         return self.__boundaries if self.__boundaries else None
         
-    def extract(self, image: np.array) -> list[tuple[list[list[int, int, int, int]], str, int]] | None:
+    def extract(self, image: np.array) -> list[tuple[list[list[int, int], list[int, int], list[int, int], list[int, int]], str, int]] | None:
         """
         This method returns the recognized numbers and their corresponding bounds.
+        The boundaries is represented by a list in the following format: [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
 
         Parameters
         ----------
@@ -66,7 +67,8 @@ class ClockDigitsExtractor:
     def show_without_digits(image: np.array, boundaries: list[list[int, int, int, int]], show: bool = True) -> np.array:
         """
             This method implements the removal of digits along recognized boundaries by painting areas containing
-            digits with white color
+            digits with white color.
+            The boundaries is represented by a list in the following format: [[x_min, x_max, y_min, y_max]]
         """
 
         image_without_digits = image.copy()
@@ -89,7 +91,8 @@ class ClockDigitsExtractor:
     def show_boundaries(image: np.array, boundaries: list[list[int, int, int, int]], show: bool = True) -> np.array:
         """
             This method creates a new image based on the original one, draws the boundaries of the found digits on it,
-            and displays the image on the screen
+            and displays the image on the screen.
+            The boundaries is represented by a list in the following format: [[x_min, x_max, y_min, y_max]]
         """
 
         image_with_boxes = image.copy()
@@ -109,10 +112,11 @@ class ClockDigitsExtractor:
         return image_with_boxes
 
     @staticmethod
-    def show_recognition(image: np.array, recognition: list[tuple[list[list[int, int, int, int]], str, int]], show: bool = True) -> np.array:
+    def show_recognition(image: np.array, recognition: list[tuple[list[list[int, int], list[int, int], list[int, int], list[int, int]], str, int]], show: bool = True) -> np.array:
         """
             This method creates a new image based on the original one, draws the boundaries of the found numbers
-            and their recognition on it, and then displays the image on the screen
+            and their recognition on it, and then displays the image on the screen.
+            The boundaries is represented by a list in the following format: [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
         """
 
         image_with_recognize_and_boxes = image.copy()
@@ -137,7 +141,7 @@ class ClockDigitsExtractor:
         return image_with_recognize_and_boxes
 
     @staticmethod
-    def display_image(title: str, image: np.array):
+    def display_image(title: str, image: np.array) -> None:
         """This method displays the image on the screen"""
 
         cv2.imshow(title, image)
@@ -146,9 +150,8 @@ class ClockDigitsExtractor:
 
 
 if __name__ == "__main__":
-    # File testing
     cde = ClockDigitsExtractor()
-    result = cde.extract_boundaries(cv2.imread("./images/t1.png"))
-    # cde.show_without_digits(cv2.imread("./images/t1.png"), result)
+    result = cde.extract(cv2.imread("./images/t1.png"))
+    #cde.show_recognition(cv2.imread("./images/t1.png"), result)
     print(*result, sep='\n')
     
