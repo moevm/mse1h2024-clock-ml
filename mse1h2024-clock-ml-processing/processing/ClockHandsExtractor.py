@@ -21,11 +21,6 @@ class ClockHandsExtractor:
         self.__center_eps = None
         self.__min_clock_hand_length = None
 
-    def get_extracted(self) -> list[tuple] | None:
-        """This method returns a list of recognized clock hands"""
-
-        return self.__clock_hands if self.__clock_hands else None
-
     def __set_constants(self, center: list[int, int], radius: int) -> None:
         """This method sets basic constants"""
 
@@ -33,7 +28,7 @@ class ClockHandsExtractor:
         self.__center_eps = radius/4
         self.__min_clock_hand_length = radius/5
         
-    def extract(self, image: np.array, center: list[int, int], radius: int) -> None:
+    def extract(self, image: np.array, center: list[int, int], radius: int) -> list[tuple] | None:
         """
         This method extracts clock hands from an image.
         
@@ -74,6 +69,8 @@ class ClockHandsExtractor:
 
         # Selecting lines that are clock hands
         self.__select_clock_hands(lines)
+
+        return self.__clock_hands if self.__clock_hands else None
 
     def __select_clock_hands(self, lines: list[list[tuple[int, int, int, int]]]) -> None:
         """"
@@ -166,6 +163,5 @@ class ClockHandsExtractor:
 
 if __name__ == "__main__":
     che = ClockHandsExtractor()
-    che.extract(cv2.imread("./images/t1.png"), [400, 400], 399)
-    lines = che.get_extracted()
+    lines = che.extract(cv2.imread("./images/t1.png"), [400, 400], 399)
     print(lines)

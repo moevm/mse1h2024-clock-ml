@@ -10,15 +10,10 @@ class ClockCircleExtractor:
         """Initialization the ClockCircleExtractor."""
         self.__clock_circle = None
 
-    def get_extracted(self) -> list[int, int, int] | None:
-        """Return the exctracted clock circle from image or None if not found"""
-        
-        return self.__clock_circle
-
-    def extract(self, image: np.array) -> None:
+    def extract(self, image: np.array) -> list[int, int, int] | None:
         """
         Extract clock circle from the input image and save it in class instance. 
-        To get extracted circle use `get_extracted()` method.
+        Return the exctracted clock circle from image or None if not found
         
         Parameters
         ----------
@@ -48,6 +43,8 @@ class ClockCircleExtractor:
         exctracted = np.int32(exctracted)
         largest_circle = max(exctracted, key=lambda elem: elem[2])
         self.__clock_circle = largest_circle
+        
+        return self.__clock_circle
 
     @staticmethod
     def show_circles(image: np.array, finded_circles: list[list[int, int, int]], show: bool = True) -> np.array:
@@ -100,6 +97,5 @@ if __name__ == "__main__":
     image = cv2.imread("./images/t1.png")
     circle_extractor = ClockCircleExtractor()
 
-    circle_extractor.extract(image=image)
-    clock_circle = circle_extractor.get_extracted()
+    clock_circle = circle_extractor.extract(image=image)
     # ClockCircleExtractor.show_circles(image, [clock_circle])
