@@ -6,40 +6,53 @@ import numpy as np
 class ClockHandsExtractor:
     """Class for extracting the positions of clock hands from an image."""
 
-    def __init__(self, image: np.array, center: list[int], radius: int) -> None:
-        """
-        Initialization the ClockHandsExtractor.
-
-        Parameters
-        ----------
-        image : np.array
-            Image object from which numbers are read
-        center : list[int]
-            Сenter point of the dial or image [x, y]
-        radius : int
-            Radius of the dial or the maximum circle inscribed in the image
-        """
+    def __init__(self, tilt_coef_eps: float = 0.05) -> None:
+        """Initialization the ClockHandsExtractor."""
 
         # Initializing an Image Object
-        self.__image = image
-        self.__gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        self.__image = None
 
         # Initializing a clock hands list
         self.__clock_hands = list()
         
         # Initializing a basic constants
-        self.__center = center
-        self.__center_eps = radius/4
-        self.__min_clock_hand_length = radius/5
-        self.__tilt_coef_eps = 0.05
+        self.__tilt_coef_eps = tilt_coef_eps
+        self.__center = None
+        self.__center_eps = None
+        self.__min_clock_hand_length = None
 
     def get_extracted(self) -> list[tuple] | None:
         """This method returns a list of recognized clock hands"""
 
         return self.__clock_hands if self.__clock_hands else None
 
-    def extract(self) -> None:
-        """This method extracts clock hands from an image"""
+    def __set_constants(self, center: list[int, int], radius: int) -> None:
+        """This method sets basic constants"""
+
+        self.__center = center
+        self.__center_eps = radius/4
+        self.__min_clock_hand_length = radius/5
+        
+    def extract(self, image: np.array, center: list[int, int], radius: int) -> None:
+        """
+        This method extracts clock hands from an image.
+        
+        Parameters
+        ----------
+        image : np.array
+            Image object from which numbers are read
+        center : list[int, int]
+            Сenter point of the dial or image [x, y]
+        radius : int
+            Radius of the dial or the maximum circle inscribed in the image
+        """
+
+        # set given parameters for extracting
+        self.__set_constants(center, radius)
+
+        # Initializing an Image Object
+        self.__image = image.copy()
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Initializing the line detector
         line_segment_detector = cv2.createLineSegmentDetector(
@@ -52,7 +65,7 @@ class ClockHandsExtractor:
 
         # Detection of all lines
         lines = line_segment_detector.detect(
-            image=self.__gray_image,
+            image=gray_image,
         )[0]
 
         if lines is None:
@@ -152,7 +165,7 @@ class ClockHandsExtractor:
 
 
 if __name__ == "__main__":
-    che = ClockHandsExtractor(cv2.imread("./images/t1.png"), [400, 400], 399)
-    che.extract()
+    che = ClockHandsExtractor()
+    che.extract(cv2.imread("./images/t1.png"), [400, 400], 399)
     lines = che.get_extracted()
     print(lines)

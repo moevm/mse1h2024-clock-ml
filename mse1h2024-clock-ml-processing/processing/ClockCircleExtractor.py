@@ -6,20 +6,8 @@ import numpy as np
 class ClockCircleExtractor:
     """Class for extracting the positions and radius for clock circle from the input image"""
 
-    def __init__(self, image: np.array) -> None:
-        """
-        Initialization the ClockCircleExtractor.
-
-        Parameters
-        ----------
-        image : np.array
-            Input image with clock
-        
-        """
-        
-        self.__src_image = image
-        self.__gray_image = cv2.cvtColor(self.__src_image, cv2.COLOR_BGR2GRAY)
-        
+    def __init__(self) -> None:
+        """Initialization the ClockCircleExtractor."""
         self.__clock_circle = None
 
     def get_extracted(self) -> list[int, int, int] | None:
@@ -27,21 +15,28 @@ class ClockCircleExtractor:
         
         return self.__clock_circle
 
-    def extract(self) -> None:
+    def extract(self, image: np.array) -> None:
         """
         Extract clock circle from the input image and save it in class instance. 
         To get extracted circle use `get_extracted()` method.
         
+        Parameters
+        ----------
+        image : np.array
+            Input image with clock
+        
         """
+        # convert to gray
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
         finded_circles = cv2.HoughCircles(
-            image=self.__gray_image,
+            image=gray_image,
             method=cv2.HOUGH_GRADIENT_ALT,
             dp=1,
             minDist=10,
             param2=0,
             minRadius=0,
-            maxRadius=self.__src_image.shape[0],
+            maxRadius=image.shape[0],
         )
         
         if finded_circles is None:
@@ -103,10 +98,8 @@ class ClockCircleExtractor:
 
 if __name__ == "__main__":
     image = cv2.imread("./images/t1.png")
-    circle_extractor = ClockCircleExtractor(
-        image=image,
-    )
+    circle_extractor = ClockCircleExtractor()
 
-    circle_extractor.extract()
+    circle_extractor.extract(image=image)
     clock_circle = circle_extractor.get_extracted()
     # ClockCircleExtractor.show_circles(image, [clock_circle])
