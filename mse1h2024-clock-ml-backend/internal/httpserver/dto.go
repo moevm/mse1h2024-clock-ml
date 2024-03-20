@@ -4,14 +4,16 @@ package httpserver
 type ImageRequest struct {
 	// EncodedImage is the base64 encoded image.
 	EncodedImage string `json:"encoded_image" binding:"required"`
+	// IsBroker is flag that broker should be used.
+	IsBroker bool `json:"is_broker"`
 	// Metadata is the metadata of the image.
-	Metadata Metadata `json:"metadata" binding:"required"`
+	Metadata Metadata `json:"metadata"`
 }
 
 type Metadata struct {
-	Width  int    `json:"width" binding:"required"`
-	Height int    `json:"height" binding:"required"`
-	Format string `json:"format" binding:"required"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	Format string `json:"format"`
 }
 
 type ErrorResponse struct {

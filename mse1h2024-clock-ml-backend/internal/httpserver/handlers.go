@@ -1,35 +1,23 @@
 package httpserver
 
 import (
-	"backend/internal/logger"
-	"backend/internal/rabbitmq"
-	"backend/internal/restapi"
 	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
-	"strconv"
+
+	"backend/internal/logger"
+	"backend/internal/rabbitmq"
+	"backend/internal/restapi"
 )
 
 const (
-	brokerQueryParam = "broker"
-	queueName        = "estimation"
+	queueName = "estimation"
 )
 
 // SendPicture processes requests for sending pictures using AMQP or REST, based on 'broker' queryParam.
 func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		isBroker, err := strconv.ParseBool(r.URL.Query().Get(brokerQueryParam))
-		if err != nil {
-			logger.Log(
-				r.Context(), slog.LevelError,
-				"failed to parse 'broker' query parameter",
-				slog.Any("error", err),
-			)
-			httpError(w, "invalid broker argument", http.StatusBadRequest)
-			return
-		}
-
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			logger.Log(
@@ -61,7 +49,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 		}
 
 		var result int
-		if isBroker {
+		if imageRequest.IsBroker {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rabbitmq")
 			err := rabbit.PublishMessage(r.Context(), queueName, body)
 			if err != nil {
