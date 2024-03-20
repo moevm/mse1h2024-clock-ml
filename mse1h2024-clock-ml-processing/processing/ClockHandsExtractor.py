@@ -6,7 +6,7 @@ import numpy as np
 class ClockHandsExtractor:
     """Class for extracting the positions of clock hands from an image."""
 
-    def __init__(self, tilt_coef_eps: float = 0.05) -> None:
+    def __init__(self, angle_eps: float = 3) -> None:
         """Initialization the ClockHandsExtractor."""
 
         # Initializing an Image Object
@@ -16,7 +16,7 @@ class ClockHandsExtractor:
         self.__clock_hands = list()
         
         # Initializing a basic constants
-        self.__tilt_coef_eps = tilt_coef_eps
+        self.__angle_eps = np.radians(angle_eps)
         self.__center = None
         self.__center_eps = None
         self.__min_clock_hand_length = None
@@ -85,12 +85,12 @@ class ClockHandsExtractor:
 
         # self.show_lines(self.__image, lines)
         # Initializing set tilt coefficients for recognized clock hands
-        tilt_coefs = set()
+        angles = set()
         
         falls_within = lambda coord, limit, eps: limit - eps <= coord <= limit + eps 
         for line in lines:
             (x1, y1, x2, y2) = line[0]
-            tilt_coef = (y2-y1)/(x2-x1)
+            angle = np.arctan2(abs(y1 - y2), abs(x1 - x2))
             if (
                 (
                     falls_within(x1, self.__center[0], self.__center_eps)
@@ -101,20 +101,20 @@ class ClockHandsExtractor:
                     and falls_within(y2, self.__center[1], self.__center_eps)
                 )
             ) and np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) >= self.__min_clock_hand_length and \
-                not self.__is_exist_tilt_coef(tilt_coef, tilt_coefs):
-                
+                not self.__is_exist_angle(angle, angles):
+                print(angle)
                 # Add new line to clock hands
                 self.__clock_hands.append((x1, y1, x2, y2))
-                # self.show_lines(self.__image, [line])
+                self.show_lines(self.__image, [line])
                 
                 # Update existing tilt coefficients
-                tilt_coefs.add(tilt_coef)
+                angles.add(angle)
 
-    def __is_exist_tilt_coef(self, tilt_coef: float, tilt_coefs: set[float]) -> bool:
+    def __is_exist_angle(self, angle: float, angles: set[float]) -> bool:
         """This method checks for the presence of a clock hand with the same slope factor"""
 
-        for cur_tilt_coef in tilt_coefs:
-            if cur_tilt_coef - self.__tilt_coef_eps <= tilt_coef <= cur_tilt_coef + self.__tilt_coef_eps:
+        for cur_angle in angles:
+            if cur_angle - self.__angle_eps <= angle <= cur_angle + self.__angle_eps:
                 return True
         return False
 
@@ -165,3 +165,4 @@ if __name__ == "__main__":
     che = ClockHandsExtractor()
     lines = che.extract(cv2.imread("./images/t1.png"), [400, 400], 399)
     print(lines)
+    
