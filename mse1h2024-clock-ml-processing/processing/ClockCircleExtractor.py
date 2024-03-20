@@ -9,7 +9,7 @@ class ClockCircleExtractor:
     def __init__(self, image: np.array) -> None:
         self.__src_image = image
         self.__gray_image = cv2.cvtColor(self.__src_image, cv2.COLOR_BGR2GRAY)
-
+        
         self.__clock_circle = None
 
     def get_clock_circle_position(self) -> list[int, int, int]:
@@ -20,7 +20,7 @@ class ClockCircleExtractor:
             image=self.__gray_image,
             method=cv2.HOUGH_GRADIENT_ALT,
             dp=1,
-            minDist=100,
+            minDist=10,
             param2=0,
             minRadius=0,
             maxRadius=self.__src_image.shape[0],
@@ -31,7 +31,7 @@ class ClockCircleExtractor:
         largest_circle = max(finded_circles, key=lambda elem: elem[2])
         self.__clock_circle = largest_circle
 
-        # self.__show_clock_circle([largest_circle])
+        self.__show_clock_circle([largest_circle])
 
     def __show_clock_circle(self, finded_circles: list) -> None:
         for circle in finded_circles:
@@ -52,7 +52,10 @@ class ClockCircleExtractor:
                 thickness=cv2.FILLED,
             )
 
-        # cv2.imshow("circle", self.__src_image)
+        cv2.imshow("circle", self.__src_image)
+        cv2.imwrite("result/circle.png", self.__src_image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

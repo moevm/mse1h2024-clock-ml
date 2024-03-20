@@ -6,12 +6,15 @@ import numpy as np
 class ClockHandsExtractor:
     """Class for extracting the positions of clock hands from an image."""
 
-    def __init__(self, image: any, center: list[int] = [444, 437]) -> None:
+    def __init__(self, image: np.array, center: list[int] = [444, 437], radius: int = 280) -> None:
         self.__image = image
         self.__gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         self.__clock_hands = list()
         self.__center = center
+        self.__center_eps = radius/4
+        self.__min_arrow_length = radius/5
+        self.__tilt_angle_eps = 0.05
 
     def get_clock_hands_position(self) -> list:
         return self.__clock_hands
@@ -33,26 +36,43 @@ class ClockHandsExtractor:
 
         # mask = self.__show_clock_hands(lines)
 
-    def __select_arrows(self, lines) -> None:
-        eps = 20
+    def __select_arrows(self, lines: list) -> None:
+        
         self.__show_clock_hands(lines)
+        tilt_angles = set()
         for line in lines:
             (x1, y1, x2, y2) = line[0]
+            tilt_angle = (y2-y1)/(x2-x1)
             if (
                 (
-                    self.__center[0] - eps <= x1 <= self.__center[0] + eps
-                    and self.__center[1] - eps <= y1 <= self.__center[1] + eps
+                    self.__center[0] - self.__center_eps <= x1 <= self.__center[0] + self.__center_eps
+                    and self.__center[1] - self.__center_eps <= y1 <= self.__center[1] + self.__center_eps
                 )
                 or (
-                    self.__center[0] - eps <= x2 <= self.__center[0] + eps
-                    and self.__center[1] - eps <= y2 <= self.__center[1] + eps
+                    self.__center[0] - self.__center_eps <= x2 <= self.__center[0] +  self.__center_eps
+                    and self.__center[1] - self.__center_eps <= y2 <= self.__center[1] +  self.__center_eps
                 )
-            ) and np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) > 30:
-                print(line)
+            ) and np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) >= self.__min_arrow_length and not self.__is_exist_tilt_angle(tilt_angle, tilt_angles):
+                # print(line)
+                # add new line
                 self.__clock_hands.append((x1, y1, x2, y2))
                 self.__show_clock_hands([line])
+                
+                # update existing tilt angles
+                tilt_angles.add(tilt_angle)
+                print(tilt_angle)
 
-    def __show_clock_hands(self, lines) -> None:
+            
+        #for i in range(len(self.__clock_hands)):
+
+    def __is_exist_tilt_angle(self, tilt_angle: float, tilt_angles: set[float]) -> bool:
+        for cur_tilt_angle in tilt_angles:
+            if cur_tilt_angle - self.__tilt_angle_eps <= tilt_angle <= cur_tilt_angle + self.__tilt_angle_eps:
+                return True
+        return False
+
+        
+    def __show_clock_hands(self, lines: list) -> None:
         image_with_clock_hands = self.__image.copy()
         # mask = np.zeros_like(self.__gray_image)
         # Iterate over points
@@ -90,7 +110,7 @@ class ClockHandsExtractor:
 
 
 if __name__ == "__main__":
-    che = ClockHandsExtractor(cv2.imread("./images/t1_clear.png"))
+    che = ClockHandsExtractor(cv2.imread("./images/t1.png"), [450, 421], 399)
     che.extract()
     lines = che.get_clock_hands_position()
     print(lines, len(lines))
