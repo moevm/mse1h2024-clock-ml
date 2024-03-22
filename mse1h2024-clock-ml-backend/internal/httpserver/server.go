@@ -1,18 +1,20 @@
 package httpserver
 
 import (
-	"backend/internal/rabbitmq"
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	"backend/internal/rabbitmq"
+
 	"backend/internal/logger"
 	"backend/internal/restapi"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 type Server struct {
@@ -59,6 +61,14 @@ func New(log *logger.Logger, rabbit rabbitmq.Publisher, rest restapi.Service, po
 
 	router.Use(log.LoggerMiddleware())
 	router.Use(middleware.Recoverer)
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Content-Type"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 
 	s := &Server{
 		Server: &http.Server{

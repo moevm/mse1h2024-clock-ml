@@ -38,6 +38,7 @@ func (s *Service) SendPictureRequest(ctx context.Context, messageBody []byte) (i
 	}
 
 	var response SuccessResponse
+	logger.Log(ctx, slog.LevelDebug, "response from estimation api", slog.Any("data", respData))
 	err = json.Unmarshal(respData, &response)
 	if err != nil {
 		logger.Log(ctx, slog.LevelWarn, "failed to unmarshall response body", slog.Any("error", err))

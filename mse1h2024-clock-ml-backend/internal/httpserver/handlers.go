@@ -1,36 +1,24 @@
 package httpserver
 
 import (
+	"encoding/json"
+	"io"
+	"log/slog"
+	"net/http"
+
 	"backend/internal/logger"
 	"backend/internal/rabbitmq"
 	"backend/internal/restapi"
-	"encoding/json"
-	"log/slog"
-	"net/http"
-	"strconv"
 )
 
 const (
-	brokerQueryParam = "broker"
-	queueName        = "estimation"
+	queueName = "estimation"
 )
 
 // SendPicture processes requests for sending pictures using AMQP or REST, based on 'broker' queryParam.
 func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		isBroker, err := strconv.ParseBool(r.URL.Query().Get(brokerQueryParam))
-		if err != nil {
-			logger.Log(
-				r.Context(), slog.LevelError,
-				"failed to parse 'broker' query parameter",
-				slog.Any("error", err),
-			)
-			httpError(w, "invalid broker argument", http.StatusBadRequest)
-			return
-		}
-
-		var body []byte
-		_, err = r.Body.Read(body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			logger.Log(
 				r.Context(),
@@ -43,7 +31,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 		}
 
 		var imageRequest ImageRequest
-		if err = json.NewDecoder(r.Body).Decode(&imageRequest); err != nil {
+		if err = json.Unmarshal(body, &imageRequest); err != nil {
 			logger.Log(
 				r.Context(),
 				slog.LevelError,
@@ -61,7 +49,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 		}
 
 		var result int
-		if isBroker {
+		if imageRequest.IsBroker {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rabbitmq")
 			err := rabbit.PublishMessage(r.Context(), queueName, body)
 			if err != nil {

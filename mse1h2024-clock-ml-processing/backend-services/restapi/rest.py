@@ -46,8 +46,7 @@ class RestAPIService:
             except Exception as e:
                 return flask.jsonify(
                     {"error": f"Internal server error: {str(e)}"},
-                    500,
-                )
+                ), 500
 
         @self.__app.errorhandler(404)
         def notFound(error):
@@ -55,8 +54,7 @@ class RestAPIService:
 
             return (
                 flask.jsonify({"error": "The requested URL was not found on server."}),
-                404,
-            )
+            ), 404
 
 
 if __name__ == "__main__":
