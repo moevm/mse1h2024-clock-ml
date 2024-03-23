@@ -35,7 +35,7 @@ func (p *Publisher) PublishMessage(ctx context.Context, queueName string, messag
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: "image/png",
 			Body:        messageBody,
 		},
 	)

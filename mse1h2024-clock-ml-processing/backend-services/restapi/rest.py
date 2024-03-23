@@ -35,18 +35,14 @@ class RestAPIService:
         @self.__app.route("/process/estimation", methods=["POST"])
         def callEstimator():
             """Handle the POST request to process image."""
-
-            try:
-                data = flask.request.json
-                print(data)
-
-                # result = self.__estimator.estimate(someParsedData) line will be implemented in the future
+            if flask.request.headers['Content-Type'] == 'image/png':
+                data = flask.request.data
 
                 return flask.jsonify({"result": 10})
-            except Exception as e:
+            else:
                 return flask.jsonify(
-                    {"error": f"Internal server error: {str(e)}"},
-                ), 500
+                    {"error": "Only image/png can be accepted"},
+                ), 400
 
         @self.__app.errorhandler(404)
         def notFound(error):
