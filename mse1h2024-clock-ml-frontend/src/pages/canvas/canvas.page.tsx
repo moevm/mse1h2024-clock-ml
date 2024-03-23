@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, MouseEvent } from "react";
 import { Canvas } from "../../components/canvas/canvas.component";
 import { Toolbar } from "../../components/canvas/toolbar/toolbar.component";
 import { Layout } from "../../components/layout/layout.component";
@@ -26,11 +26,28 @@ export const CanvasPage = () => {
 	function onClear() {
 		canvasAPIRef.current?.clear();
 	}
+
+	function onSubmit(e: MouseEvent) {
+		canvasRef.current?.toBlob((blob) => {
+			const form = new FormData();
+			form.append("file", blob!, "img.png");
+
+			form.append("broker", "true");
+
+			fetch("http://localhost:54321/api/v1/get-estimation", {
+				method: "POST",
+				body: form,
+			})
+				.then((res) => res.text()) // TODO допилить, когда будет rabbit готов.
+				.then(console.log, console.log); // todo  Пока что протестить вывод не получается
+		});
+	}
+
 	return (
 		<Layout linear>
 			<Toolbar onSelect={onSelect} />
 			<Canvas ref={canvasRef} />
-			<Controls onClear={onClear} />
+			<Controls onClear={onClear} onSubmit={onSubmit} />
 		</Layout>
 	);
 };
