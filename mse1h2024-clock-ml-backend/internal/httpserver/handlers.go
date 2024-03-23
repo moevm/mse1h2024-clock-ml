@@ -42,10 +42,10 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 
 		var request ImageRequest
 
-		request.IsBroker, err = strconv.ParseBool(r.URL.Query().Get(brokerParam))
+		request.IsBroker, err = strconv.ParseBool(r.FormValue(brokerParam))
 		if err != nil {
 			logger.Log(r.Context(), slog.LevelInfo, "failed to get broker param", slog.Any("error", err))
-			httpError(w, "invalid file", http.StatusBadRequest)
+			httpError(w, "invalid broker param", http.StatusBadRequest)
 			return
 		}
 
