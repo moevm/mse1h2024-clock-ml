@@ -6,7 +6,7 @@ import numpy as np
 class ClockHandsExtractor:
     """Class for extracting the positions of clock hands from an image."""
 
-    def __init__(self, angle_eps: float = 3) -> None:
+    def __init__(self, angle_eps: float = 5) -> None:
         """Initialization the ClockHandsExtractor."""
 
         # Initializing an Image Object
@@ -25,7 +25,7 @@ class ClockHandsExtractor:
         """This method sets basic constants"""
 
         self.__center = center
-        self.__center_eps = radius/4
+        self.__center_eps = radius/3
         self.__min_clock_hand_length = radius/5
         
     def extract(self, image: np.array, center: list[int, int], radius: int) -> list[tuple] | None:
@@ -91,24 +91,48 @@ class ClockHandsExtractor:
         for line in lines:
             (x1, y1, x2, y2) = line[0]
             angle = np.arctan2(abs(y1 - y2), abs(x1 - x2))
+            
             if (
-                (
-                    falls_within(x1, self.__center[0], self.__center_eps)
-                    and falls_within(y1, self.__center[1], self.__center_eps)
-                )
-                or (
-                    falls_within(x2, self.__center[0], self.__center_eps)
-                    and falls_within(y2, self.__center[1], self.__center_eps)
-                )
+                #
+                # (
+                #     falls_within(x1, self.__center[0], self.__center_eps)
+                #     and falls_within(y1, self.__center[1], self.__center_eps)
+                # )
+                # or (
+                #     falls_within(x2, self.__center[0], self.__center_eps)
+                #     and falls_within(y2, self.__center[1], self.__center_eps)
+                # )
+                self.shortest_distance(self.__center, (x1, y1), (x2, y2))[0] <= self.__center_eps
             ) and np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) >= self.__min_clock_hand_length and \
                 not self.__is_exist_angle(angle, angles):
-                print(angle)
+                print(self.shortest_distance(self.__center, (x1, y1), (x2, y2)))
                 # Add new line to clock hands
                 self.__clock_hands.append((x1, y1, x2, y2))
-                self.show_lines(self.__image, [line])
+                point = self.shortest_distance(self.__center, (x1, y1), (x2, y2))[1]
+                self.show_lines(self.__image, [line, [(*self.__center, *point)]])
                 
                 # Update existing tilt coefficients
                 angles.add(angle)
+
+    def shortest_distance(self, point, line_start, line_end):
+        point = np.array(point)
+        line_start = np.array(line_start)
+        line_end = np.array(line_end)
+
+        line_vector = line_end - line_start
+        point_vector = point - line_start
+
+        line_length_squared = np.dot(line_vector, line_vector)
+        t = np.dot(point_vector, line_vector) / line_length_squared
+
+        if t < 0:
+            closest_point = line_start
+        elif t > 1:
+            closest_point = line_end
+        else:
+            closest_point = line_start + t * line_vector
+
+        return (np.linalg.norm(point - closest_point), closest_point)
 
     def __is_exist_angle(self, angle: float, angles: set[float]) -> bool:
         """This method checks for the presence of a clock hand with the same slope factor"""
@@ -119,7 +143,7 @@ class ClockHandsExtractor:
         return False
 
     @staticmethod    
-    def show_lines(image: np.array, lines: list[list[tuple[int, int, int]]], show: bool = True) -> np.array:
+    def show_lines(image: np.array, lines: list[list[tuple[int, int, int, int]]], show: bool = True) -> np.array:
         """
         Draw the extracted lines on given image.
         
@@ -165,4 +189,3 @@ if __name__ == "__main__":
     che = ClockHandsExtractor()
     lines = che.extract(cv2.imread("./images/t1.png"), [400, 400], 399)
     print(lines)
-    
