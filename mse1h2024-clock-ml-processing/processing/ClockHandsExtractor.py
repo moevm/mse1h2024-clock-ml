@@ -83,38 +83,29 @@ class ClockHandsExtractor:
             The lines is represented by a list in the following format: [(x1, y1, x2, y2)].
         """
 
-        # self.show_lines(self.__image, lines)
         # Initializing set tilt coefficients for recognized clock hands
         angles = set()
         
-        falls_within = lambda coord, limit, eps: limit - eps <= coord <= limit + eps 
         for line in lines:
             (x1, y1, x2, y2) = line[0]
             angle = np.arctan2(abs(y1 - y2), abs(x1 - x2))
             
-            if (
-                #
-                # (
-                #     falls_within(x1, self.__center[0], self.__center_eps)
-                #     and falls_within(y1, self.__center[1], self.__center_eps)
-                # )
-                # or (
-                #     falls_within(x2, self.__center[0], self.__center_eps)
-                #     and falls_within(y2, self.__center[1], self.__center_eps)
-                # )
-                self.shortest_distance(self.__center, (x1, y1), (x2, y2))[0] <= self.__center_eps
-            ) and np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) >= self.__min_clock_hand_length and \
+            if self.__shortest_distance(self.__center, (x1, y1), (x2, y2))[0] <= self.__center_eps and \
+                np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) >= self.__min_clock_hand_length and \
                 not self.__is_exist_angle(angle, angles):
-                print(self.shortest_distance(self.__center, (x1, y1), (x2, y2)))
+                print(self.__shortest_distance(self.__center, (x1, y1), (x2, y2)))
                 # Add new line to clock hands
                 self.__clock_hands.append((x1, y1, x2, y2))
-                point = self.shortest_distance(self.__center, (x1, y1), (x2, y2))[1]
+                point = self.__shortest_distance(self.__center, (x1, y1), (x2, y2))[1]
                 self.show_lines(self.__image, [line, [(*self.__center, *point)]])
+                #self.show_lines(self.__image, [[(*self.__center, *point)]])
                 
                 # Update existing tilt coefficients
                 angles.add(angle)
 
-    def shortest_distance(self, point, line_start, line_end):
+    def __shortest_distance(self, point: list[int, int], line_start: list[int, int], line_end: list[int, int]) -> tuple[float, np.ndarray[float, float]]:
+        """This method calculates the shortest distance from a point to a line given by the start and end coordinates"""
+
         point = np.array(point)
         line_start = np.array(line_start)
         line_end = np.array(line_end)
@@ -189,3 +180,4 @@ if __name__ == "__main__":
     che = ClockHandsExtractor()
     lines = che.extract(cv2.imread("./images/t1.png"), [400, 400], 399)
     print(lines)
+    
