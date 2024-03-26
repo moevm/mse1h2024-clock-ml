@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13
+    hostname: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    networks:
+      - default
+  backend:
+    build:
+      dockerfile: Dockerfile
+      context: mse1h2024-clock-ml-backend
+    links:
+      - ml
+      - rabbitmq
+    ports:
+      - "54321:54321"
+    networks:
+      - default
+  ml:
+    build:
+      dockerfile: Dockerfile
+      context: mse1h2024-clock-ml-processing
+    links:
+      - rabbitmq
+    ports:
+      - "22869:22869"
+    networks:
+      - default
+  frontend:
+    build:
+      dockerfile: Dockerfile
+      context: mse1h2024-clock-ml-frontend
+    ports:
+      - "80:80"
+
+networks:
+  default:
+
+volumes:
+  rabbit_data:

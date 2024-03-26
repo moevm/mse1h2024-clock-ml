@@ -4,7 +4,7 @@ app:
 http:
   port: 54321
 estimation:
-  host: "localhost"
+  host: ml
   port: 22869
 rabbitmq:
-  url: "amqp://guest:guest@localhost:5672/"
+  url: "amqp://user:password@rabbitmq:5672/"
