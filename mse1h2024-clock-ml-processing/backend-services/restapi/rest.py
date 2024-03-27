@@ -1,5 +1,6 @@
 # import requirements
 import flask
+import numpy as np
 
 
 class RestAPIService:
@@ -37,16 +38,19 @@ class RestAPIService:
             """Handle the POST request to process image."""
 
             try:
-                data = flask.request.json
-                print(data)
+                image = flask.request.form["image"]
+                time = flask.request.form["time"]
 
-                # result = self.__estimator.estimate(someParsedData) line will be implemented in the future
+                result = self.__estimator.estimate(image=image, time=time)
 
-                return flask.jsonify({"result": 10})
+                return flask.jsonify({"result": result})
             except Exception as e:
-                return flask.jsonify(
-                    {"error": f"Internal server error: {str(e)}"},
-                ), 500
+                return (
+                    flask.jsonify(
+                        {"error": f"Internal server error: {str(e)}"},
+                    ),
+                    500,
+                )
 
         @self.__app.errorhandler(404)
         def notFound(error):
