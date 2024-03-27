@@ -2,7 +2,7 @@
 import importlib
 
 # import project modules
-# here will be import Estimator class in the future
+estimationModule = importlib.import_module("processing.Estimator")
 restAPIModule = importlib.import_module("backend-services.restapi.rest")
 # here will be import RabbitMQService class in the future
 
@@ -17,17 +17,7 @@ class Core:
 
     def __init__(self) -> None:
         """Initialization the core for ML-processing."""
-
-        class EstimatorClass:
-            """Estimator class implemented for example"""
-
-            def __init__(self) -> None:
-                pass
-
-            def estimate(self) -> str:
-                return f"estimation: ok"
-
-        self.__estimator = EstimatorClass()
+        self.__estimator = estimationModule.Estimator()
         self.__restAPIService = restAPIModule.RestAPIService(
             estimator=self.__estimator,
         )
