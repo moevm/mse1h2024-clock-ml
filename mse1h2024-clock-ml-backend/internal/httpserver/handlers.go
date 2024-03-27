@@ -1,64 +1,72 @@
 package httpserver
 
 import (
+	"backend/internal/logger"
 	"encoding/json"
-	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 
-	"backend/internal/logger"
 	"backend/internal/rabbitmq"
 	"backend/internal/restapi"
 )
 
 const (
-	queueName = "estimation"
+	queueName   = "estimation"
+	brokerParam = "broker"
+	fileParam   = "file"
 )
 
 // SendPicture processes requests for sending pictures using AMQP or REST, based on 'broker' queryParam.
 func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := io.ReadAll(r.Body)
+		err := r.ParseMultipartForm(10 << 20) // 10 MB max
 		if err != nil {
-			logger.Log(
-				r.Context(),
-				slog.LevelError,
-				"failed to read request body",
-				slog.Any("error", err),
-			)
+			logger.Log(r.Context(), slog.LevelInfo, "failed to read request body", slog.Any("error", err))
 			httpError(w, "invalid body of request", http.StatusBadRequest)
 			return
 		}
 
-		var imageRequest ImageRequest
-		if err = json.Unmarshal(body, &imageRequest); err != nil {
-			logger.Log(
-				r.Context(),
-				slog.LevelError,
-				"failed to parse JSON from body",
-				slog.Any("error", err),
-			)
-			httpError(w, "invalid JSON body", http.StatusBadRequest)
+		file, handler, err := r.FormFile(fileParam)
+		if err != nil {
+			logger.Log(r.Context(), slog.LevelInfo, "failed to get file from request", slog.Any("error", err))
+			httpError(w, "invalid file", http.StatusBadRequest)
+			return
+		}
+		defer file.Close()
+
+		if handler.Size == 0 {
+			httpError(w, "file should not be empty", http.StatusBadRequest)
 			return
 		}
 
-		if imageRequest.Metadata.Width == 0 || imageRequest.Metadata.Height == 0 {
-			logger.Log(r.Context(), slog.LevelInfo, "invalid image size")
-			httpError(w, "invalid image size", http.StatusBadRequest)
+		var request ImageRequest
+
+		request.IsBroker, err = strconv.ParseBool(r.FormValue(brokerParam))
+		if err != nil {
+			logger.Log(r.Context(), slog.LevelInfo, "failed to get broker param", slog.Any("error", err))
+			httpError(w, "invalid broker param", http.StatusBadRequest)
+			return
+		}
+
+		_, err = file.Read(request.Image)
+		if err != nil {
+			logger.Log(r.Context(), slog.LevelInfo, "failed to read file", slog.Any("error", err))
+			httpError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		var result int
-		if imageRequest.IsBroker {
+		if request.IsBroker {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rabbitmq")
-			err := rabbit.PublishMessage(r.Context(), queueName, body)
+			err := rabbit.PublishMessage(r.Context(), queueName, request.Image)
 			if err != nil {
 				httpError(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 		} else {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rest")
-			result, err = rest.SendPictureRequest(r.Context(), body)
+			result, err = rest.SendPictureRequest(r.Context(), request.Image)
 			if err != nil {
 				httpError(w, err.Error(), http.StatusInternalServerError)
 				return

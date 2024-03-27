@@ -20,7 +20,7 @@ type Service struct {
 
 // SendPictureRequest sends request with encoded picture to estimation
 func (s *Service) SendPictureRequest(ctx context.Context, messageBody []byte) (int, error) {
-	resp, err := http.Post(s.Url, "application/json", bytes.NewBuffer(messageBody))
+	resp, err := http.Post(s.Url, "image/png", bytes.NewBuffer(messageBody))
 	if err != nil {
 		logger.Log(ctx, slog.LevelError, "failed to send picture request", slog.Any("error", err))
 		return 0, ErrInvalidRequest
