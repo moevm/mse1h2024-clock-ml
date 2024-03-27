@@ -4,3 +4,7 @@ export type TToolbar = {
 };
 
 export type TTools = "brush" | "eraser";
+
+export interface IEstimationResponse {
+	result: number;
+}
