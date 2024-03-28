@@ -73,20 +73,21 @@ class Estimator:
         estimation_result = 0
 
         digits = self.__clock_digits_extractor.extract(image)
-        self.__clock_digits_extractor.show_recognition(image, digits)
+        # self.__clock_digits_extractor.show_recognition(image, digits)
         bound = self.__clock_digits_extractor.extract_boundaries(image)
-        self.__clock_digits_extractor.show_without_digits(image, bound)
+        # self.__clock_digits_extractor.show_without_digits(image, bound)
 
         circle = self.__clock_circle_extrator.extract(image)
-        center = circle[0:2]
-        radius = circle[2]
+        if circle is not None:
+            center = circle[0:2]
+            radius = circle[2]
 
-        self.__clock_circle_extrator.show_circles(image, [circle])
-        hands = self.__clock_hands_extractor.extract(image, circle[0:2], circle[2])
+            # self.__clock_circle_extrator.show_circles(image, [circle])
+            hands = self.__clock_hands_extractor.extract(image, circle[0:2], circle[2])
 
-        print(f"Digits = {digits}")
-        print(f"Circle = {circle}")
-        print(f"Hands = {hands}")
+        # print(f"Digits = {digits}")
+        # print(f"Circle = {circle}")
+        # print(f"Hands = {hands}")
 
         # 1 балл - Нет чисел (нарисовали все что угодно, но не числа (хотя бы одно)):
         if digits is None:

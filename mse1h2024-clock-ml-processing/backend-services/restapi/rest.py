@@ -1,5 +1,9 @@
 # import requirements
 import flask
+from PIL import Image
+import io
+import numpy as np
+
 
 class RestAPIService:
     """Class for handing with backend data using REST-API."""
@@ -34,15 +38,21 @@ class RestAPIService:
         @self.__app.route("/process/estimation", methods=["POST"])
         def callEstimator():
             """Handle the POST request to process image."""
-            
-            if flask.request.headers['Content-Type'] == 'image/png':
+
+            if flask.request.headers["Content-Type"] == "image/png":
                 data = flask.request.data
 
-                return flask.jsonify({"result": 5})
+                image = np.array(Image.open(io.BytesIO(data)))
+                result = self.__estimator.estimate(image=image, time=0) 
+
+                return flask.jsonify({"result": result})
             else:
-                return flask.jsonify(
-                    {"error": "Only image/png can be accepted"},
-                ), 400
+                return (
+                    flask.jsonify(
+                        {"error": "Only image/png can be accepted"},
+                    ),
+                    400,
+                )
 
         @self.__app.errorhandler(404)
         def notFound(error):

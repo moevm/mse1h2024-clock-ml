@@ -1,12 +1,13 @@
 package httpserver
 
 import (
-	"backend/internal/logger"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 	"strconv"
-
+	"io"
+	
+	"backend/internal/logger"
 	"backend/internal/rabbitmq"
 	"backend/internal/restapi"
 )
@@ -28,6 +29,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 		}
 
 		file, handler, err := r.FormFile(fileParam)
+
 		if err != nil {
 			logger.Log(r.Context(), slog.LevelInfo, "failed to get file from request", slog.Any("error", err))
 			httpError(w, "invalid file", http.StatusBadRequest)
@@ -49,7 +51,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			return
 		}
 
-		_, err = file.Read(request.Image)
+		request.Image, err = io.ReadAll(file)
 		if err != nil {
 			logger.Log(r.Context(), slog.LevelInfo, "failed to read file", slog.Any("error", err))
 			httpError(w, "internal server error", http.StatusInternalServerError)
@@ -65,7 +67,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 				return
 			}
 		} else {
-			logger.Log(r.Context(), slog.LevelInfo, "sending image using rest")
+			logger.Log(r.Context(), slog.LevelInfo, "sending image using restapi")
 			result, err = rest.SendPictureRequest(r.Context(), request.Image)
 			if err != nil {
 				httpError(w, err.Error(), http.StatusInternalServerError)
