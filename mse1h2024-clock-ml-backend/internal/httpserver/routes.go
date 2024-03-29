@@ -1,9 +1,10 @@
 package httpserver
 
 import (
+	"net/http"
+	
 	"backend/internal/rabbitmq"
 	"backend/internal/restapi"
-	"net/http"
 
 	"github.com/go-chi/chi/v5"
 )
