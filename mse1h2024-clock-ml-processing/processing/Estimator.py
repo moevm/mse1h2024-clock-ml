@@ -6,6 +6,7 @@ import numpy as np
 from processing.ClockCircleExtractor import ClockCircleExtractor
 from processing.ClockHandsExtractor import ClockHandsExtractor
 from processing.ClockDigitsExtractor import ClockDigitsExtractor
+from processing.const import REFERENCE_DIGITS_ANGLES
 
 
 """
@@ -30,34 +31,35 @@ from processing.ClockDigitsExtractor import ClockDigitsExtractor
     Стрелки - опционально
 5 - 
     Числа - должны быть все внутри циферблата по окружности
-        // контур числа не находится на расстоянии от центра меньшем, чем 1/3 от радиуса циферблата
+        /контур числа не находится на расстоянии от центра меньшем, чем 1/3 от радиуса циферблата
     Круг - должен быть
     Стрелки - опционально
 6 - Все числа расположены корректно; начиная с 6 баллов, предъявляются требования только к стрелкам
     Числа - все расположены на своих местах, внутри круга
     Круг - должен быть
     Стрелки - стрелок нет 
-        // Вопрос: как отличать 6 баллов от 7 баллов на основании стрелок.
+        /испытуемый обвел цифры кружками, стрелки не учитываются
 7 - Все числа расположены корректно; время показывается неправильно (сильная погрешность в угле наклона)
     Числа - все расположены на своих местах
     Круг - должен быть
     Стрелки - должны быть; угол наклона сильно отличается от нужного
-        // отличие по градусам больше, чем ~60
+        /более 30 градусов, стрелки не учитываются
 8 - Все числа расположены корректно; время показывается неправильно (средняя погрешность в угле наклона)
     Числа - должны быть все внутри циферблата по окружности
     Круг - должен быть
     Стрелки - должны быть; угол наклона отличается более чем на ~час-два часа
-        // ~31-60 градусов 
+        /16-30 градусов на часовой и минутной стрелке
 9 - Все числа расположены корректно; время показывается неправильно (легкая погрешность в угле наклона)
     Числа - должны быть все внутри циферблата по окружности
     Круг - должен быть
     Стрелки - должны быть; угол наклона отличается в пределах ~(получас; час)
-        // ~16-30 градусов
+        /~7-15 градусов
+        /0-15 градусов на часовой, 16-30 на минутной
 10 - Все числа расположены корректно; время показывается правильно (с допустимой маленькой погрешностью (легчайшая погрешность) в угле наклона)
     Числа - должны быть все внутри циферблата по окружности
     Круг - должен быть
-    Стрелки - должны быть; угол наклона точен в пределах ~ получаса;
-        // Пусть получас = ~15 градусов
+    Стрелки - должны быть; угол наклона точен в пределах ~ 0-15 градусов на часовой и минутной стрелке;
+        /0-15 градусов на часовой и минутной стрелке
 """
 
 
@@ -68,26 +70,22 @@ class Estimator:
         self.__clock_circle_extrator = ClockCircleExtractor()
         self.__clock_hands_extractor = ClockHandsExtractor()
         self.__clock_digits_extractor = ClockDigitsExtractor()
-
+        self.__digits_angles = {i: 0 for i in range(1, 13)}
+        self.__delta_angle = 15
+        
     def estimate(self, image: np.array, time: int = 0) -> int:
         estimation_result = 0
 
         digits = self.__clock_digits_extractor.extract(image)
+        # print(digits, sep='\n')
         # self.__clock_digits_extractor.show_recognition(image, digits)
         bound = self.__clock_digits_extractor.extract_boundaries(image)
-        # self.__clock_digits_extractor.show_without_digits(image, bound)
 
         circle = self.__clock_circle_extrator.extract(image)
         if circle is not None:
             center = circle[0:2]
             radius = circle[2]
-
-            # self.__clock_circle_extrator.show_circles(image, [circle])
             hands = self.__clock_hands_extractor.extract(image, circle[0:2], circle[2])
-
-        # print(f"Digits = {digits}")
-        # print(f"Circle = {circle}")
-        # print(f"Hands = {hands}")
 
         # 1 балл - Нет чисел (нарисовали все что угодно, но не числа (хотя бы одно)):
         if digits is None:
@@ -126,7 +124,12 @@ class Estimator:
             ):
                 estimation_result = 5
 
-            # 6 балл -
+                # 6 балл - числа на своих местах
+                self.__define_digits_angle(digits, center)
+                self.__clock_digits_extractor.show_recognition(image, digits)
+                if digits:
+                    estimation_result = 6
+                
 
         # print(self.__digits_in_circle(digits, [circle[0], circle[1]], circle[2]))
         return estimation_result
@@ -155,6 +158,25 @@ class Estimator:
 
         return around_circumference
 
+    def __define_digits_angle(self, digits, center):
+        for digit in digits:
+            digit_number = int(digit[1])
+            ([x1, y1], [x2, y2], [x3, y3], [x4, y4]) = digit[0]
+            digit_center = ((x1+x2)/2, (y1+y3)/2)
+
+            dx = digit_center[0] - center[0]
+            dy = digit_center[1] - center[1]
+            angle = np.arctan2(dx, -dy)
+            angle_degrees = np.round(np.degrees(angle), 3)
+            if angle_degrees < 0:
+                angle_degrees += 360.
+            
+            self.__digits_angles[digit_number] = angle_degrees
+
+        print(digits, sep='\n')
+        print(self.__digits_angles)
+        
+    
 
 if __name__ == "__main__":
     estimator = Estimator()
