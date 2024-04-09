@@ -6,7 +6,7 @@ import numpy as np
 from processing.ClockCircleExtractor import ClockCircleExtractor
 from processing.ClockHandsExtractor import ClockHandsExtractor
 from processing.ClockDigitsExtractor import ClockDigitsExtractor
-from processing.const import REFERENCE_DIGITS_ANGLES
+from processing.const import *
 
 
 """
@@ -72,12 +72,8 @@ class Estimator:
         self.__clock_digits_extractor = ClockDigitsExtractor()
         self.__digits_angles = {}
         self.__clock_hands_angles = {"hour": 0, "minute": 0}
-        self.__time = {
-            "hour": 11,
-            "minute": 1
-        }
-        self.__delta_angle = 15
-        
+        self.__time = {"hour": 11, "minute": 1}
+
     def estimate(self, image: np.array, time: int = 0) -> int:
         estimation_result = 0
 
@@ -134,9 +130,9 @@ class Estimator:
                 self.__define_digits_angle(digits, center)
                 if self.__is_all_number_positions_correct():
                     estimation_result = 6
-                    
+
                     if hands is not None and len(hands) == 2:
-            
+
                         print(self.__clock_hands_angles)
                         # 10 баллов - стрелки с погрешностью 0-15 градусов
                         if self.__check_time(15, 15):
@@ -151,31 +147,47 @@ class Estimator:
                         else:
                             estimation_result = 7
 
-        # print(self.__digits_in_circle(digits, [circle[0], circle[1]], circle[2]))
         return estimation_result
 
     def __check_time(self, delta_angle_hour: int, delta_angle_minute: int) -> bool:
+        """_summary_
+
+        Args:
+            delta_angle_hour (int): _description_
+            delta_angle_minute (int): _description_
+
+        Returns:
+            bool: _description_
+        """
+
         minute = self.__time["minute"]
         hour = self.__time["hour"]
-        
-        check_angle = lambda angle, delta, value_to_check: angle - delta <= value_to_check <= angle + delta
+
         if hour in self.__digits_angles and minute in self.__digits_angles:
             # Нашли оба числа
             hour_angle = self.__digits_angles[hour]
             minute_angle = self.__digits_angles[minute]
-            return check_angle(hour_angle, delta_angle_hour, self.__clock_hands_angles["hour"]) and check_angle(minute_angle, delta_angle_minute, self.__clock_hands_angles["minute"])
+            return CHECK_ANGLE(
+                hour_angle, delta_angle_hour, self.__clock_hands_angles["hour"]
+            ) and CHECK_ANGLE(
+                minute_angle, delta_angle_minute, self.__clock_hands_angles["minute"]
+            )
         elif hour in self.__digits_angles:
             # Нашли только часовое число
             hour_angle = self.__digits_angles[hour]
-            return check_angle(hour_angle, delta_angle_hour, self.__clock_hands_angles["hour"])
+            return CHECK_ANGLE(
+                hour_angle, delta_angle_hour, self.__clock_hands_angles["hour"]
+            )
         elif minute in self.__digits_angles:
             # Только минутная
             minute_angle = self.__digits_angles[minute]
-            return check_angle(minute_angle, delta_angle_minute, self.__clock_hands_angles["minute"])
+            return CHECK_ANGLE(
+                minute_angle, delta_angle_minute, self.__clock_hands_angles["minute"]
+            )
         else:
             # Ни одна из стрелок
             return False
-    
+
     def __digits_in_circle(self, digits, center, radius):
         is_in_circle = lambda point: radius > np.sqrt(
             (point[0] - center[0]) ** 2 + (point[1] - center[1]) ** 2
@@ -204,15 +216,15 @@ class Estimator:
         for digit in digits:
             digit_number = int(digit[1])
             ([x1, y1], [x2, y2], [x3, y3], [x4, y4]) = digit[0]
-            digit_center = ((x1+x2)/2, (y1+y3)/2)
+            digit_center = ((x1 + x2) / 2, (y1 + y3) / 2)
 
             dx = digit_center[0] - center[0]
             dy = digit_center[1] - center[1]
             angle = np.arctan2(dx, -dy)
             angle_degrees = np.round(np.degrees(angle), 3)
             if angle_degrees < 0:
-                angle_degrees += 360.
-            
+                angle_degrees += 360.0
+
             self.__digits_angles[digit_number] = angle_degrees
 
         # print(digits, sep='\n')
@@ -223,41 +235,45 @@ class Estimator:
         hands = []
         for clock_hand in clock_hands:
             (x1, y1, x2, y2) = clock_hand
-            x_start, x_end = (x1, x2) if abs(center[0] - x1) < abs(center[0] - x2) else (x2, x1) 
-            y_start, y_end = (y1, y2) if abs(center[1] - y1) < abs(center[1] - y2) else (y2, y1) 
+            x_start, x_end = (
+                (x1, x2) if abs(center[0] - x1) < abs(center[0] - x2) else (x2, x1)
+            )
+            y_start, y_end = (
+                (y1, y2) if abs(center[1] - y1) < abs(center[1] - y2) else (y2, y1)
+            )
             dx = x_end - x_start
             dy = y_end - y_start
             clock_hand_length = np.sqrt(dx**2 + dy**2)
-        
+
             angle = np.arctan2(dx, -dy)
             angle_degrees = np.round(np.degrees(angle), 3)
             if angle_degrees < 0:
-                angle_degrees += 360.
+                angle_degrees += 360.0
             hands.append((clock_hand_length, angle_degrees))
-        
+
         hands = sorted(hands, key=lambda elem: elem[0])
         self.__clock_hands_angles["hour"] = hands[0][1]
         self.__clock_hands_angles["minute"] = hands[1][1]
 
     def __parse_time(self):
-        #TODO:
+        # TODO:
         pass
-    
+
     def __is_all_number_positions_correct(self) -> bool:
+        """_summary_
+
+        Returns:
+            bool: _description_
+        """
         for digit, angle in self.__digits_angles.items():
             if digit in REFERENCE_DIGITS_ANGLES:
-                if digit == 12:
-                    if not(0 <= angle <= self.__delta_angle or 360 - self.__delta_angle <= angle <= 360): #TODO: simplify formula
-                        return False
-                else:
-                    if not REFERENCE_DIGITS_ANGLES[digit] - self.__delta_angle <= angle <= REFERENCE_DIGITS_ANGLES[digit] + self.__delta_angle:
-                        print("_is_all_number_positions_correct")
-                        print(REFERENCE_DIGITS_ANGLES[digit] - self.__delta_angle)
-                        print(REFERENCE_DIGITS_ANGLES[digit] + self.__delta_angle)
-                        print(digit, angle, REFERENCE_DIGITS_ANGLES[digit])
-                        return False
+                if not CHECK_ANGLE(
+                    REFERENCE_DIGITS_ANGLES[digit], DELTA_DIGIT_ANGLE, angle
+                ):
+                    return False
         return True
-        
+
+
 if __name__ == "__main__":
     estimator = Estimator()
     image = cv2.imread("./images/t1_circles.png")
