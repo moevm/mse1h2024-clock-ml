@@ -14,8 +14,10 @@ import (
 )
 
 const (
-	brokerParam = "broker"
-	fileParam   = "file"
+	brokerParam  = "broker"
+	hoursParam   = "broker"
+	minutesParam = "broker"
+	fileParam    = "file"
 )
 
 // SendPicture processes requests for sending pictures using AMQP or REST, based on 'broker' queryParam.
@@ -48,6 +50,20 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 		if err != nil {
 			logger.Log(r.Context(), slog.LevelInfo, "failed to get broker param", slog.Any("error", err))
 			httpError(w, "invalid broker param", http.StatusBadRequest)
+			return
+		}
+
+		request.Hours, err = strconv.Atoi(r.FormValue(hoursParam))
+		if err != nil {
+			logger.Log(r.Context(), slog.LevelInfo, "failed to get hours param", slog.Any("error", err))
+			httpError(w, "invalid hours param", http.StatusBadRequest)
+			return
+		}
+
+		request.Minutes, err = strconv.Atoi(r.FormValue(minutesParam))
+		if err != nil {
+			logger.Log(r.Context(), slog.LevelInfo, "failed to get minutes param", slog.Any("error", err))
+			httpError(w, "invalid minutes param", http.StatusBadRequest)
 			return
 		}
 
@@ -94,7 +110,7 @@ func generateMessage(request ImageRequest) ([]byte, error) {
 	writer := multipart.NewWriter(body)
 	defer writer.Close()
 
-	image, err := writer.CreateFormFile("file", "image.png")
+	image, err := writer.CreateFormFile(fileParam, "image.png")
 	if err != nil {
 		return nil, err
 	}
@@ -104,11 +120,11 @@ func generateMessage(request ImageRequest) ([]byte, error) {
 		return nil, err
 	}
 
-	err = writer.WriteField("hours", strconv.Itoa(request.Hours))
+	err = writer.WriteField(hoursParam, strconv.Itoa(request.Hours))
 	if err != nil {
 		return nil, err
 	}
-	err = writer.WriteField("minutes", strconv.Itoa(request.Hours))
+	err = writer.WriteField(minutesParam, strconv.Itoa(request.Hours))
 	if err != nil {
 		return nil, err
 	}

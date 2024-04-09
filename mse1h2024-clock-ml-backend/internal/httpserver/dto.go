@@ -3,13 +3,13 @@ package httpserver
 // ImageRequest is a request to upload an image into ml-service.
 type ImageRequest struct {
 	// Image is the binary image.
-	Image []byte `json:"image" binding:"required"`
+	Image []byte
 	// IsBroker is flag that broker should be used.
-	IsBroker bool `json:"is_broker" binding:"required"`
+	IsBroker bool
 	// Hours is the number of hours in the image to check.
-	Hours int `json:"hours" binding:"required"`
+	Hours int
 	// Hours is the number of minutes in the image to check.
-	Minutes int `json:"minutes" binding:"required"`
+	Minutes int
 }
 
 type ErrorResponse struct {
