@@ -3,10 +3,10 @@ import cv2
 import numpy as np
 
 # import project modules
-from processing.ClockCircleExtractor import ClockCircleExtractor
-from processing.ClockHandsExtractor import ClockHandsExtractor
-from processing.ClockDigitsExtractor import ClockDigitsExtractor
-from processing.const import *
+from processing.extractors.ClockCircleExtractor import ClockCircleExtractor
+from processing.extractors.ClockHandsExtractor import ClockHandsExtractor
+from processing.extractors.ClockDigitsExtractor import ClockDigitsExtractor
+from processing.const.const import *
 
 
 class Estimator:
@@ -235,11 +235,3 @@ class Estimator:
                 ):
                     return False
         return True
-
-
-if __name__ == "__main__":
-    estimator = Estimator()
-    image = cv2.imread("./images/t1_circles.png")
-
-    estimation_result = estimator.estimate(image)
-    print(f"Esimation result is equal {estimation_result}")
