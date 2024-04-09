@@ -70,19 +70,18 @@ class Estimator:
         self.__clock_circle_extrator = ClockCircleExtractor()
         self.__clock_hands_extractor = ClockHandsExtractor()
         self.__clock_digits_extractor = ClockDigitsExtractor()
-        self.__digits_angles = {i: 0 for i in range(1, 13)}
+        self.__digits_angles = {}
         self.__delta_angle = 15
         
     def estimate(self, image: np.array, time: int = 0) -> int:
         estimation_result = 0
 
         digits = self.__clock_digits_extractor.extract(image)
-        # print(digits, sep='\n')
-        # self.__clock_digits_extractor.show_recognition(image, digits)
-        bound = self.__clock_digits_extractor.extract_boundaries(image)
+        self.__clock_digits_extractor.show_recognition(image, digits)
 
         circle = self.__clock_circle_extrator.extract(image)
         if circle is not None:
+            self.__clock_circle_extrator.show_circles(image, [circle])
             center = circle[0:2]
             radius = circle[2]
             hands = self.__clock_hands_extractor.extract(image, circle[0:2], circle[2])
@@ -126,8 +125,7 @@ class Estimator:
 
                 # 6 балл - числа на своих местах
                 self.__define_digits_angle(digits, center)
-                self.__clock_digits_extractor.show_recognition(image, digits)
-                if digits:
+                if self.__check_number_angles():
                     estimation_result = 6
                 
 
@@ -175,9 +173,17 @@ class Estimator:
 
         print(digits, sep='\n')
         print(self.__digits_angles)
-        
-    
 
+    def __check_number_angles(self) -> bool:
+        for digit, angle in self.__digits_angles.items():
+            if digit in REFERENCE_DIGITS_ANGLES:
+                if not REFERENCE_DIGITS_ANGLES[digit] - self.__delta_angle <= angle <= REFERENCE_DIGITS_ANGLES[digit] + self.__delta_angle:
+                    print(REFERENCE_DIGITS_ANGLES[digit] - self.__delta_angle <= angle)
+                    print(angle <= REFERENCE_DIGITS_ANGLES[digit] + self.__delta_angle)
+                    print(digit, angle, REFERENCE_DIGITS_ANGLES[digit])
+                    return False
+        return True
+        
 if __name__ == "__main__":
     estimator = Estimator()
     image = cv2.imread("./images/t1_circles.png")
