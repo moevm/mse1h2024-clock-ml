@@ -70,24 +70,44 @@ class Estimator:
         self.__clock_circle_extrator = ClockCircleExtractor()
         self.__clock_hands_extractor = ClockHandsExtractor()
         self.__clock_digits_extractor = ClockDigitsExtractor()
-        self.__digits_angles = {}
-        self.__clock_hands_angles = {"hour": 0, "minute": 0}
-        self.__time = {"hour": 11, "minute": 1}
+        self.__extracted_digits_angles = {}
+        self.__clock_hands_angles = {
+            "hour": 0,
+            "minute": 0,
+        }
+        self.__time = {
+            "hour": 11,
+            "minute": 1,
+        }  # TODO: read and parse time from backend
 
     def estimate(self, image: np.array, time: int = 0) -> int:
+        """_summary_
+
+        Args:
+            image (np.array): _description_
+            time (int, optional): _description_. Defaults to 0.
+
+        Returns:
+            int: _description_
+        """
+
         estimation_result = 0
 
         digits = self.__clock_digits_extractor.extract(image)
-        self.__clock_digits_extractor.show_recognition(image, digits)
-
         circle = self.__clock_circle_extrator.extract(image)
+        # # uncomment for logging
+        # self.__clock_digits_extractor.show_recognition(image, digits)
+
         if circle is not None:
-            self.__clock_circle_extrator.show_circles(image, [circle])
+            # # uncomment for logging
+            # self.__clock_circle_extrator.show_circles(image, [circle])
             center = circle[0:2]
             radius = circle[2]
             hands = self.__clock_hands_extractor.extract(image, circle[0:2], circle[2])
-            self.__clock_hands_extractor.show_lines(image, hands)
             self.__define_clock_hands_angle(hands, center)
+
+            # # uncomment for logging
+            # self.__clock_hands_extractor.show_lines(image, hands)
 
         # 1 балл - Нет чисел (нарисовали все что угодно, но не числа (хотя бы одно)):
         if digits is None:
@@ -130,10 +150,7 @@ class Estimator:
                 self.__define_digits_angle(digits, center)
                 if self.__is_all_number_positions_correct():
                     estimation_result = 6
-
                     if hands is not None and len(hands) == 2:
-
-                        print(self.__clock_hands_angles)
                         # 10 баллов - стрелки с погрешностью 0-15 градусов
                         if self.__check_time(15, 15):
                             estimation_result = 10
@@ -163,24 +180,27 @@ class Estimator:
         minute = self.__time["minute"]
         hour = self.__time["hour"]
 
-        if hour in self.__digits_angles and minute in self.__digits_angles:
+        if (
+            hour in self.__extracted_digits_angles
+            and minute in self.__extracted_digits_angles
+        ):
             # Нашли оба числа
-            hour_angle = self.__digits_angles[hour]
-            minute_angle = self.__digits_angles[minute]
+            hour_angle = self.__extracted_digits_angles[hour]
+            minute_angle = self.__extracted_digits_angles[minute]
             return CHECK_ANGLE(
                 hour_angle, delta_angle_hour, self.__clock_hands_angles["hour"]
             ) and CHECK_ANGLE(
                 minute_angle, delta_angle_minute, self.__clock_hands_angles["minute"]
             )
-        elif hour in self.__digits_angles:
+        elif hour in self.__extracted_digits_angles:
             # Нашли только часовое число
-            hour_angle = self.__digits_angles[hour]
+            hour_angle = self.__extracted_digits_angles[hour]
             return CHECK_ANGLE(
                 hour_angle, delta_angle_hour, self.__clock_hands_angles["hour"]
             )
-        elif minute in self.__digits_angles:
+        elif minute in self.__extracted_digits_angles:
             # Только минутная
-            minute_angle = self.__digits_angles[minute]
+            minute_angle = self.__extracted_digits_angles[minute]
             return CHECK_ANGLE(
                 minute_angle, delta_angle_minute, self.__clock_hands_angles["minute"]
             )
@@ -225,10 +245,7 @@ class Estimator:
             if angle_degrees < 0:
                 angle_degrees += 360.0
 
-            self.__digits_angles[digit_number] = angle_degrees
-
-        # print(digits, sep='\n')
-        print(self.__digits_angles)
+            self.__extracted_digits_angles[digit_number] = angle_degrees
 
     def __define_clock_hands_angle(self, clock_hands, center):
         # [(x1, y1, x2, y2)]
@@ -256,7 +273,7 @@ class Estimator:
         self.__clock_hands_angles["minute"] = hands[1][1]
 
     def __parse_time(self):
-        # TODO:
+        # TODO: parsing time
         pass
 
     def __is_all_number_positions_correct(self) -> bool:
@@ -265,7 +282,7 @@ class Estimator:
         Returns:
             bool: _description_
         """
-        for digit, angle in self.__digits_angles.items():
+        for digit, angle in self.__extracted_digits_angles.items():
             if digit in REFERENCE_DIGITS_ANGLES:
                 if not CHECK_ANGLE(
                     REFERENCE_DIGITS_ANGLES[digit], DELTA_DIGIT_ANGLE, angle
