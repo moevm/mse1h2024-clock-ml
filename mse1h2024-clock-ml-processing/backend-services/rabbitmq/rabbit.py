@@ -2,9 +2,6 @@ import asyncio
 from functools import partial
 import aio_pika
 import importlib
-from PIL import Image
-import io
-import json
 
 estimationModule = importlib.import_module("processing.Estimator")
 
