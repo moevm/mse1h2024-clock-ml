@@ -1,15 +1,16 @@
 package httpserver
 
 import (
-	"encoding/json"
-	"io"
-	"log/slog"
-	"net/http"
-	"strconv"
-
 	"backend/internal/logger"
 	"backend/internal/rabbitmq"
 	"backend/internal/restapi"
+	"bytes"
+	"encoding/json"
+	"io"
+	"log/slog"
+	"mime/multipart"
+	"net/http"
+	"strconv"
 )
 
 const (
@@ -57,10 +58,17 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			return
 		}
 
+		message, err := generateMessage(request)
+		if err != nil {
+			logger.Log(r.Context(), slog.LevelInfo, "failed to generate message for ml service", slog.Any("error", err))
+			httpError(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
 		var result int
 		if request.IsBroker {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rabbitmq")
-			result, err = rabbit.PublishMessage(r.Context(), request.Image)
+			result, err = rabbit.PublishMessage(r.Context(), message)
 		} else {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using restapi")
 			result, err = rest.SendPictureRequest(r.Context(), request.Image)
@@ -78,6 +86,34 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			logger.Log(r.Context(), slog.LevelError, "error during encoding response", slog.Any("error", err))
 		}
 	}
+}
+
+func generateMessage(request ImageRequest) ([]byte, error) {
+	body := &bytes.Buffer{}
+
+	writer := multipart.NewWriter(body)
+	defer writer.Close()
+
+	image, err := writer.CreateFormFile("file", "image.png")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = image.Write(request.Image)
+	if err != nil {
+		return nil, err
+	}
+
+	err = writer.WriteField("hours", strconv.Itoa(request.Hours))
+	if err != nil {
+		return nil, err
+	}
+	err = writer.WriteField("minutes", strconv.Itoa(request.Hours))
+	if err != nil {
+		return nil, err
+	}
+
+	return body.Bytes(), nil
 }
 
 func httpError(w http.ResponseWriter, message string, code int) {

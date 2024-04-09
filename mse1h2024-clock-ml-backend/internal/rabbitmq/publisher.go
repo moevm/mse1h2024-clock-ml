@@ -51,7 +51,7 @@ func (p *Publisher) PublishMessage(ctx context.Context, messageBody []byte) (int
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "image/png",
+			ContentType: "multipart/form-data",
 			Body:        messageBody,
 		},
 	)
