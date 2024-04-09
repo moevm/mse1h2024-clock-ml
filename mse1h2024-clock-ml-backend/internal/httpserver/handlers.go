@@ -2,18 +2,17 @@ package httpserver
 
 import (
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
-	"io"
-	
+
 	"backend/internal/logger"
 	"backend/internal/rabbitmq"
 	"backend/internal/restapi"
 )
 
 const (
-	queueName   = "estimation"
 	brokerParam = "broker"
 	fileParam   = "file"
 )
@@ -61,18 +60,15 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 		var result int
 		if request.IsBroker {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rabbitmq")
-			err := rabbit.PublishMessage(r.Context(), queueName, request.Image)
-			if err != nil {
-				httpError(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+			result, err = rabbit.PublishMessage(r.Context(), request.Image)
 		} else {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using restapi")
 			result, err = rest.SendPictureRequest(r.Context(), request.Image)
-			if err != nil {
-				httpError(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+		}
+
+		if err != nil {
+			httpError(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		w.WriteHeader(http.StatusOK)

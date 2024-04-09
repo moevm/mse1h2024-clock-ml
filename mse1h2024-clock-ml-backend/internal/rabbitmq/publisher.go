@@ -3,10 +3,14 @@ package rabbitmq
 import (
 	"backend/internal/logger"
 	"context"
+	"github.com/google/uuid"
 	"log/slog"
+	"strconv"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+const queueName = "estimation"
 
 // Publisher instance of rabbitmq.
 type Publisher struct {
@@ -15,8 +19,8 @@ type Publisher struct {
 }
 
 // PublishMessage publishes a message to the specified rabbitmq queue.
-func (p *Publisher) PublishMessage(ctx context.Context, queueName string, messageBody []byte) error {
-	_, err := p.channel.QueueDeclare(
+func (p *Publisher) PublishMessage(ctx context.Context, messageBody []byte) (int, error) {
+	q, err := p.channel.QueueDeclare(
 		queueName,
 		false,
 		false,
@@ -25,8 +29,20 @@ func (p *Publisher) PublishMessage(ctx context.Context, queueName string, messag
 		nil,
 	)
 	if err != nil {
-		return err
+		return 0, err
 	}
+
+	correlationID := uuid.New().String()
+
+	msgs, err := p.channel.Consume(
+		q.Name,
+		"",
+		true,  // autoAck
+		true,  // exclusive
+		false, // noLocal
+		false, // noWait
+		nil,   // args
+	)
 
 	err = p.channel.PublishWithContext(
 		ctx,
@@ -42,10 +58,24 @@ func (p *Publisher) PublishMessage(ctx context.Context, queueName string, messag
 
 	if err != nil {
 		logger.Log(ctx, slog.LevelInfo, "failed to publish message to rabbitmq", slog.Any("error", err))
-		return ErrInvalidPublishing
+		return 0, ErrInvalidPublishing
 	}
 
-	return nil
+	var result int
+	for msg := range msgs {
+		if msg.CorrelationId != correlationID {
+			continue
+		}
+
+		ans := string(msg.Body)
+		result, err = strconv.Atoi(ans)
+		if err != nil {
+			logger.Log(ctx, slog.LevelInfo, "got error answer from ml service", slog.Any("answer", ans))
+			return 0, ErrInvalidPublishing
+		}
+	}
+
+	return result, nil
 }
 
 // Close closes the rabbitmq connection and channel.
