@@ -71,6 +71,7 @@ class Estimator:
         self.__clock_hands_extractor = ClockHandsExtractor()
         self.__clock_digits_extractor = ClockDigitsExtractor()
         self.__digits_angles = {}
+        self.__clock_hands_angles = {"hour": 0, "minute": 0}
         self.__delta_angle = 15
         
     def estimate(self, image: np.array, time: int = 0) -> int:
@@ -85,6 +86,9 @@ class Estimator:
             center = circle[0:2]
             radius = circle[2]
             hands = self.__clock_hands_extractor.extract(image, circle[0:2], circle[2])
+            self.__clock_hands_extractor.show_lines(image, hands)
+            self.__define_clock_hands_angle(hands)
+            print(self.__clock_hands_angles)
 
         # 1 балл - Нет чисел (нарисовали все что угодно, но не числа (хотя бы одно)):
         if digits is None:
@@ -125,13 +129,19 @@ class Estimator:
 
                 # 6 балл - числа на своих местах
                 self.__define_digits_angle(digits, center)
-                if self.__check_number_angles():
+                if self.__is_all_number_positions_correct():
                     estimation_result = 6
-                
+
+                    # 7 баллов - стрелки с погрешностью большей 30 градусов
+                    # self.__()
+
 
         # print(self.__digits_in_circle(digits, [circle[0], circle[1]], circle[2]))
         return estimation_result
 
+    # def __():
+        
+    
     def __digits_in_circle(self, digits, center, radius):
         is_in_circle = lambda point: radius > np.sqrt(
             (point[0] - center[0]) ** 2 + (point[1] - center[1]) ** 2
@@ -171,10 +181,33 @@ class Estimator:
             
             self.__digits_angles[digit_number] = angle_degrees
 
-        print(digits, sep='\n')
+        # print(digits, sep='\n')
         print(self.__digits_angles)
 
-    def __check_number_angles(self) -> bool:
+    def __define_clock_hands_angle(self, clock_hands):
+        # [(x1, y1, x2, y2)]
+        hands = []
+        for clock_hand in clock_hands:
+            (x1, y1, x2, y2) = clock_hand
+            dx = x1 - x2
+            dy = y1 - y2
+            clock_hand_length = np.sqrt(dx**2 + dy**2)
+        
+            angle = np.arctan2(dx, -dy)
+            angle_degrees = np.round(np.degrees(angle), 3)
+            if angle_degrees < 0:
+                angle_degrees += 360.
+            hands.append((clock_hand_length, angle_degrees))
+        
+        hands = sorted(hands, key=lambda elem: elem[0])
+        self.__clock_hands_angles["hour"] = hands[0][1]
+        self.__clock_hands_angles["minute"] = hands[1][1]
+
+    def __parse_time(self):
+        #TODO:
+        pass
+    
+    def __is_all_number_positions_correct(self) -> bool:
         for digit, angle in self.__digits_angles.items():
             if digit in REFERENCE_DIGITS_ANGLES:
                 if not REFERENCE_DIGITS_ANGLES[digit] - self.__delta_angle <= angle <= REFERENCE_DIGITS_ANGLES[digit] + self.__delta_angle:
