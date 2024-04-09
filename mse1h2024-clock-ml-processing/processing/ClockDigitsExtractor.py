@@ -28,13 +28,20 @@ class ClockDigitsExtractor:
         """
         
         self.__boundaries = self.__reader.detect(
+            # img=image,
+            # optimal_num_chars=2,
+            # text_threshold=0.1,
+            # height_ths=0.1,
+            # width_ths=0.1,
+            # ycenter_ths=0.1,
+            # add_margin=0.23
             img=image,
-            optimal_num_chars=2,
-            text_threshold=0.1,
+            text_threshold=0.5,
+            link_threshold=0.8,
+            ycenter_ths=0.2,
             height_ths=0.1,
             width_ths=0.1,
-            ycenter_ths=0.1,
-            add_margin=0.23
+            add_margin=0.23,
         )[0][0]
 
         return self.__boundaries if self.__boundaries else None
@@ -55,10 +62,11 @@ class ClockDigitsExtractor:
             allowlist="0123456789",
             decoder='beamsearch',
             text_threshold=0.5,
+            link_threshold=0.8,
+            ycenter_ths=0.2,
             height_ths=0.1,
             width_ths=0.1,
-            ycenter_ths=0.1,
-            add_margin=0.23
+            add_margin=0.23,
         )
 
         return self.__digits if self.__digits else None
