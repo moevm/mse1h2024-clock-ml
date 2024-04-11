@@ -20,11 +20,18 @@ class ClockCircle:
 
 
 class ClockHands:
-    def __init__(
-        self, lines: list[tuple[int, int, int, int]], clock_center: list[int, int]
-    ) -> None:
+    def __init__(self, lines: list[tuple[int, int, int, int]]) -> None:
+        self._clock_hands = lines.copy()
         self._angles = {"hour": 0, "minute": 0}
-        self.__define_angle(lines, clock_center)
+
+    @property
+    def clock_hands(self):
+        return self._clock_hands
+
+    def get_clock_hands_count(self) -> int:
+        if self._clock_hands:
+            return len(self._clock_hands)
+        return 0
 
     @property
     def hour_angle(self):
@@ -34,11 +41,9 @@ class ClockHands:
     def minute_angle(self):
         return self._angles["minute"]
 
-    def __define_angle(
-        self, clock_hands: list[tuple[int, int, int, int]], clock_center: list[int, int]
-    ) -> None:
+    def define_angle(self, clock_center: list[int, int]) -> None:
         hands_description = []  # (длина стрелки, угол стрелки)
-        for clock_hand in clock_hands:
+        for clock_hand in self._clock_hands:
             (x1, y1, x2, y2) = clock_hand
             x_start, x_end = (
                 (x1, x2)
@@ -75,18 +80,33 @@ class ClockDigits:
                 int,
             ]
         ],
-        clock_center: list[int, int],
     ) -> None:
-        self._digits = digits
+        self._digits = digits.copy()
         self._angles = {}
 
-        self.__define_angle(center=clock_center)
+    @property
+    def angles(self) -> dict:
+        return self._angles.copy()
 
     def get_digit_angle(self, digit: int) -> float:
         return self._angles.get(digit)
 
-    def __define_angle(self, center: list[int, int]) -> None:
-        for digit in self.digits:
+    @property
+    def digits(
+        self,
+    ) -> list[
+        tuple[
+            list[list[int, int], list[int, int], list[int, int], list[int, int]],
+            str,
+            int,
+        ]
+    ]:
+        "The boundaries is represented by a list in the following format: [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]"
+
+        return self._digits.copy()
+
+    def define_angle(self, center: list[int, int]) -> None:
+        for digit in self._digits:
             digit_number = int(digit[1])
             ([x1, y1], [x2, y2], [x3, y3], [x4, y4]) = digit[0]
             digit_center = ((x1 + x2) / 2, (y1 + y3) / 2)
