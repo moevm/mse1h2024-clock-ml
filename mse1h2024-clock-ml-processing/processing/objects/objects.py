@@ -65,10 +65,37 @@ class ClockHands:
         self._angles["minute"] = hands_description[1][1]
 
 
-if __name__ == "__main__":
-    # test circle
-    circle = ClockCircle(center_coordinates=[1, 2], radius=5)
-    print(circle.center_coordinates, circle.radius)
+class ClockDigits:
+    def __init__(
+        self,
+        digits: list[
+            tuple[
+                list[list[int, int], list[int, int], list[int, int], list[int, int]],
+                str,
+                int,
+            ]
+        ],
+        clock_center: list[int, int],
+    ) -> None:
+        self._digits = digits
+        self._angles = {}
 
-    # test clock hands
-    hands = ClockHands([(1, 1, 2, 2)])
+        self.__define_angle(center=clock_center)
+
+    def get_digit_angle(self, digit: int) -> float:
+        return self._angles.get(digit)
+
+    def __define_angle(self, center: list[int, int]) -> None:
+        for digit in self.digits:
+            digit_number = int(digit[1])
+            ([x1, y1], [x2, y2], [x3, y3], [x4, y4]) = digit[0]
+            digit_center = ((x1 + x2) / 2, (y1 + y3) / 2)
+
+            dx = digit_center[0] - center[0]
+            dy = digit_center[1] - center[1]
+            angle = np.arctan2(dx, -dy)
+            angle_degrees = np.round(np.degrees(angle), 3)
+            if angle_degrees < 0:
+                angle_degrees += 360.0
+
+            self._angles[digit_number] = angle_degrees
