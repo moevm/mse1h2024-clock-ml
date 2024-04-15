@@ -19,6 +19,8 @@ class RabbitmMQService:
             # image = Image.open(io.BytesIO(image_data))
 
             # result = self.__estimator.estimate(image)
+            
+            print(msg.body)
 
             if msg.reply_to:
                 await channel.default_exchange.publish(
@@ -29,25 +31,24 @@ class RabbitmMQService:
                     routing_key=msg.reply_to,
                 )
 
+    async def run():
+        connection = await aio_pika.connect_robust(
+            "amqp://user:password@rabbitmq:5672/"
+        )
 
-async def main():
-    connection = await aio_pika.connect_robust(
-        "amqp://user:password@rabbitmq:5672/"
-    )
+        queue_name = "estimation"
 
-    queue_name = "estimation"
+        async with connection:
+            channel = await connection.channel()
+            queue = await channel.declare_queue(queue_name)
 
-    async with connection:
-        channel = await connection.channel()
-        queue = await channel.declare_queue(queue_name)
+            service = RabbitmMQService()
+            await queue.consume(partial(service.consumer, channel=channel))
 
-        service = RabbitmMQService()
-        await queue.consume(partial(service.consumer, channel=channel))
-
-        try:
-            await asyncio.Future()
-        except Exception:
-            pass
+            try:
+                await asyncio.Future()
+            except Exception:
+                pass
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ import importlib
 # import project modules
 estimationModule = importlib.import_module("processing.Estimator")
 restAPIModule = importlib.import_module("backend-services.restapi.rest")
+rabbitModule = importlib.import_module("backend-services.rabbitmq.rabbit")
 # here will be import RabbitMQService class in the future
 
 
@@ -17,15 +18,17 @@ class Core:
 
     def __init__(self) -> None:
         """Initialization the core for ML-processing."""
-        self.__estimator = estimationModule.Estimator()
-        self.__restAPIService = restAPIModule.RestAPIService(
-            estimator=self.__estimator,
-        )
+        # self.__estimator = estimationModule.Estimator()
+        # self.__restAPIService = restAPIModule.RestAPIService(
+         #   estimator=self.__estimator,
+        # )
+        self.__rabbitMQService = rabbitModule.RabbitmMQService()
 
     def start(self) -> None:
         """Run the REST-API service"""
 
-        self.__restAPIService.run()
+        # self.__restAPIService.run()
+        asyncio.run(self.__rabbitMQService.run())
 
 
 if __name__ == "__main__":
