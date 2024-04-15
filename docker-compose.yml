@@ -17,6 +17,9 @@ services:
     build:
       dockerfile: Dockerfile
       context: mse1h2024-clock-ml-backend
+    depends_on:
+      - rabbitmq
+      - ml
     links:
       - ml
       - rabbitmq

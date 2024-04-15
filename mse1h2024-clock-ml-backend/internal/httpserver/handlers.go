@@ -15,8 +15,8 @@ import (
 
 const (
 	brokerParam  = "broker"
-	hoursParam   = "broker"
-	minutesParam = "broker"
+	hoursParam   = "hours"
+	minutesParam = "minutes"
 	fileParam    = "file"
 )
 
@@ -31,7 +31,6 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 		}
 
 		file, handler, err := r.FormFile(fileParam)
-
 		if err != nil {
 			logger.Log(r.Context(), slog.LevelInfo, "failed to get file from request", slog.Any("error", err))
 			httpError(w, "invalid file", http.StatusBadRequest)
