@@ -1,8 +1,9 @@
 # import requirements
 import importlib
+import asyncio
 
 # import project modules
-restAPIModule = importlib.import_module("backend-services.restapi.rest")
+# restAPIModule = importlib.import_module("backend-services.restapi.rest")
 rabbitModule = importlib.import_module("backend-services.rabbitmq.rabbit")
 # here will be import RabbitMQService class in the future
 
@@ -23,13 +24,14 @@ class Core:
         # )
         self.__rabbitMQService = rabbitModule.RabbitmMQService()
 
-    def start(self) -> None:
+    async def start(self) -> None:
         """Run the REST-API service"""
 
         # self.__restAPIService.run()
-        asyncio.run(self.__rabbitMQService.run())
+
+        await self.__rabbitMQService.run()
 
 
 if __name__ == "__main__":
     core = Core()
-    core.start()
+    asyncio.run(core.start())

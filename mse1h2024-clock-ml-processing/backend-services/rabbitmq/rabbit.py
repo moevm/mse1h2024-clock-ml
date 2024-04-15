@@ -1,10 +1,6 @@
 import asyncio
 from functools import partial
 import aio_pika
-import importlib
-
-estimationModule = importlib.import_module("processing.Estimator")
-
 
 class RabbitmMQService:
     def __init__(self):
@@ -15,11 +11,6 @@ class RabbitmMQService:
             channel: aio_pika.RobustChannel
     ):
         async with msg.process():
-            # image_data = msg.body
-            # image = Image.open(io.BytesIO(image_data))
-
-            # result = self.__estimator.estimate(image)
-            
             print(msg.body)
 
             if msg.reply_to:
@@ -31,25 +22,22 @@ class RabbitmMQService:
                     routing_key=msg.reply_to,
                 )
 
-    async def run():
-        connection = await aio_pika.connect_robust(
-            "amqp://user:password@rabbitmq:5672/"
-        )
+    async def run(self):
+        print("Starting RabbitMQ service")
+        try:
+            connection = await aio_pika.connect_robust(
+                "amqp://user:password@rabbitmq:5672/"
+            )
 
-        queue_name = "estimation"
+            queue_name = "estimation"
 
-        async with connection:
-            channel = await connection.channel()
-            queue = await channel.declare_queue(queue_name)
+            async with connection:
+                channel = await connection.channel()
+                queue = await channel.declare_queue(queue_name)
 
-            service = RabbitmMQService()
-            await queue.consume(partial(service.consumer, channel=channel))
+                await queue.consume(partial(self.consumer, channel=channel))
 
-            try:
+                # Run indefinitely
                 await asyncio.Future()
-            except Exception:
-                pass
-
-
-if __name__ == '__main__':
-    asyncio.run(main())
+        except aio_pika.exceptions.AMQPConnectionError as e:
+            print(f"Failed to connect to RabbitMQ server: {e}")
