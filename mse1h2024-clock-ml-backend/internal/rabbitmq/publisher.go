@@ -20,7 +20,7 @@ type Publisher struct {
 }
 
 // PublishMessage publishes a message to the specified rabbitmq queue.
-func (p *Publisher) PublishMessage(ctx context.Context, messageBody []byte) (int, error) {
+func (p *Publisher) PublishMessage(ctx context.Context, body []byte, contentType string) (int, error) {
 	q, err := p.channel.QueueDeclare(
 		"",
 		false,
@@ -58,10 +58,10 @@ func (p *Publisher) PublishMessage(ctx context.Context, messageBody []byte) (int
 		false,
 		false,
 		amqp.Publishing{
-			ContentType:   "text/plain",
+			ContentType:   contentType,
 			CorrelationId: correlationID,
 			ReplyTo:       q.Name,
-			Body:          []byte("messageBody"),
+			Body:          body,
 		},
 	)
 

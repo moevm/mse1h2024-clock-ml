@@ -73,7 +73,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			return
 		}
 
-		message, err := generateMessage(request)
+		message, contentType, err := generateMessage(request)
 		if err != nil {
 			logger.Log(r.Context(), slog.LevelInfo, "failed to generate message for ml service", slog.Any("error", err))
 			httpError(w, "internal server error", http.StatusInternalServerError)
@@ -83,7 +83,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 		var result int
 		if request.IsBroker {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using rabbitmq")
-			result, err = rabbit.PublishMessage(r.Context(), message)
+			result, err = rabbit.PublishMessage(r.Context(), message, contentType)
 		} else {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using restapi")
 			result, err = rest.SendPictureRequest(r.Context(), request.Image)
@@ -103,7 +103,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 	}
 }
 
-func generateMessage(request ImageRequest) ([]byte, error) {
+func generateMessage(request ImageRequest) ([]byte, string, error) {
 	body := &bytes.Buffer{}
 
 	writer := multipart.NewWriter(body)
@@ -111,24 +111,24 @@ func generateMessage(request ImageRequest) ([]byte, error) {
 
 	image, err := writer.CreateFormFile(fileParam, "image.png")
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	_, err = image.Write(request.Image)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	err = writer.WriteField(hoursParam, strconv.Itoa(request.Hours))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	err = writer.WriteField(minutesParam, strconv.Itoa(request.Hours))
+	err = writer.WriteField(minutesParam, strconv.Itoa(request.Minutes))
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return body.Bytes(), nil
+	return body.Bytes(), writer.FormDataContentType(), nil
 }
 
 func httpError(w http.ResponseWriter, message string, code int) {

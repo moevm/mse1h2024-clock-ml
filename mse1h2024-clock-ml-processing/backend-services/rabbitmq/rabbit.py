@@ -1,28 +1,32 @@
-from faststream import FastStream
-from faststream.rabbit import RabbitMessage, RabbitBroker
+import pika
 
 
 class RabbitmMQService:
     def __init__(self):
         self.__estimator = None
 
-    async def run(self):
-        print("Starting RabbitMQ service", flush=True)
-        try:
-            broker = RabbitBroker("amqp://user:password@rabbitmq:5672/")
+    def run(self):
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                host='rabbitmq', port='5672', virtual_host='/',
+                credentials=pika.PlainCredentials(username='user', password='password')
+            )
+        )
 
-            @broker.subscriber("estimation")
-            async def consumer(msg: RabbitMessage):
-                print(msg.body, flush=True)
+        channel = connection.channel()
 
-                if msg.reply_to:
-                    await broker.publish(
-                        "10",
-                        queue=msg.reply_to,
-                        correlation_id=msg.correlation_id,
-                    )
+        channel.queue_declare(queue='estimation')
 
-            app = FastStream(broker)
-            await app.run()
-        except:
-            print(f"Failed to connect to RabbitMQ server", flush=True)
+        def on_request(ch, method, props, body):
+            response = 10
+
+            ch.basic_publish(exchange='',
+                             routing_key=props.reply_to,
+                             properties=pika.BasicProperties(correlation_id=props.correlation_id),
+                             body=str(response))
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(queue='estimation', on_message_callback=on_request)
+
+        channel.start_consuming()
