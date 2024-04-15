@@ -1,5 +1,5 @@
 # import requirements
-'''
+
 import flask
 from PIL import Image
 import io
@@ -66,4 +66,3 @@ class RestAPIService:
 
 if __name__ == "__main__":
     pass
-'''

@@ -2,8 +2,8 @@ import pika
 
 
 class RabbitmMQService:
-    def __init__(self):
-        self.__estimator = None
+    def __init__(self, estimator):
+        self.__estimator = estimator
 
     def run(self):
         connection = pika.BlockingConnection(
