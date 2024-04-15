@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"log/slog"
 	"strconv"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -21,7 +22,7 @@ type Publisher struct {
 // PublishMessage publishes a message to the specified rabbitmq queue.
 func (p *Publisher) PublishMessage(ctx context.Context, messageBody []byte) (int, error) {
 	q, err := p.channel.QueueDeclare(
-		queueName,
+		"",
 		false,
 		false,
 		false,
@@ -43,16 +44,24 @@ func (p *Publisher) PublishMessage(ctx context.Context, messageBody []byte) (int
 		false, // noWait
 		nil,   // args
 	)
+	if err != nil {
+		logger.Log(ctx, slog.LevelInfo, "failed to consume rabbit mq", slog.Any("error", err))
+		return 0, ErrInvalidPublishing
+	}
 
+	subCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
 	err = p.channel.PublishWithContext(
-		ctx,
+		subCtx,
 		"",
 		queueName,
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "multipart/form-data",
-			Body:        messageBody,
+			ContentType:   "multipart/form-data",
+			CorrelationId: correlationID,
+			ReplyTo:       q.Name,
+			Body:          messageBody,
 		},
 	)
 

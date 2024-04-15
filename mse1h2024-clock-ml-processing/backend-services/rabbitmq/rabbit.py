@@ -1,43 +1,28 @@
-import asyncio
-from functools import partial
-import aio_pika
+from faststream import FastStream
+from faststream.rabbit import RabbitMessage, RabbitBroker
+
 
 class RabbitmMQService:
     def __init__(self):
         self.__estimator = None
 
-    async def consumer(
-            self, msg: aio_pika.IncomingMessage,
-            channel: aio_pika.RobustChannel
-    ):
-        async with msg.process():
-            print(msg.body)
-
-            if msg.reply_to:
-                await channel.default_exchange.publish(
-                    message=aio_pika.Message(
-                        body="10",
-                        correlation_id=msg.correlation_id,
-                    ),
-                    routing_key=msg.reply_to,
-                )
-
     async def run(self):
-        print("Starting RabbitMQ service")
+        print("Starting RabbitMQ service", flush=True)
         try:
-            connection = await aio_pika.connect_robust(
-                "amqp://user:password@rabbitmq:5672/"
-            )
+            broker = RabbitBroker("amqp://user:password@rabbitmq:5672/")
 
-            queue_name = "estimation"
+            @broker.subscriber("estimation")
+            async def consumer(msg: RabbitMessage):
+                print(msg.body, flush=True)
 
-            async with connection:
-                channel = await connection.channel()
-                queue = await channel.declare_queue(queue_name)
+                if msg.reply_to:
+                    await broker.publish(
+                        "10",
+                        queue=msg.reply_to,
+                        correlation_id=msg.correlation_id,
+                    )
 
-                await queue.consume(partial(self.consumer, channel=channel))
-
-                # Run indefinitely
-                await asyncio.Future()
-        except aio_pika.exceptions.AMQPConnectionError as e:
-            print(f"Failed to connect to RabbitMQ server: {e}")
+            app = FastStream(broker)
+            await app.run()
+        except:
+            print(f"Failed to connect to RabbitMQ server", flush=True)
