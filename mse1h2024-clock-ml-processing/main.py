@@ -2,7 +2,6 @@
 import importlib
 
 # import project modules
-estimationModule = importlib.import_module("processing.Estimator")
 restAPIModule = importlib.import_module("backend-services.restapi.rest")
 rabbitModule = importlib.import_module("backend-services.rabbitmq.rabbit")
 # here will be import RabbitMQService class in the future
