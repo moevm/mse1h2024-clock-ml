@@ -58,10 +58,10 @@ func (p *Publisher) PublishMessage(ctx context.Context, messageBody []byte) (int
 		false,
 		false,
 		amqp.Publishing{
-			ContentType:   "multipart/form-data",
+			ContentType:   "text/plain",
 			CorrelationId: correlationID,
 			ReplyTo:       q.Name,
-			Body:          messageBody,
+			Body:          []byte("messageBody"),
 		},
 	)
 
@@ -82,9 +82,12 @@ func (p *Publisher) PublishMessage(ctx context.Context, messageBody []byte) (int
 			logger.Log(ctx, slog.LevelInfo, "got error answer from ml service", slog.Any("answer", ans))
 			return 0, ErrInvalidPublishing
 		}
+
+		return result, nil
 	}
 
-	return result, nil
+	logger.Log(ctx, slog.LevelWarn, "got no from ml service")
+	return 0, ErrInvalidPublishing
 }
 
 // Close closes the rabbitmq connection and channel.
