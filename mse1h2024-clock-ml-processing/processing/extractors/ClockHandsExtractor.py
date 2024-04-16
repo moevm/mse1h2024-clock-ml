@@ -10,9 +10,6 @@ class ClockHandsExtractor:
     def __init__(self, angle_eps: float = 5) -> None:
         """Initialization the ClockHandsExtractor."""
 
-        # Initializing an Image Object
-        self.__image = None
-
         # Initializing a clock hands list
         self.__clock_hands = None
 
@@ -21,6 +18,9 @@ class ClockHandsExtractor:
         self.__center = None
         self.__center_eps = None
         self.__min_clock_hand_length = None
+
+    def __clear_previous(self):
+        self.__clock_hands = None
 
     def __set_constants(self, center: list[int, int], radius: int) -> None:
         """This method sets basic constants"""
@@ -44,12 +44,11 @@ class ClockHandsExtractor:
         radius : int
             Radius of the dial or the maximum circle inscribed in the image
         """
-
+        self.__clear_previous()
         # set given parameters for extracting
         self.__set_constants(center, radius)
 
         # Initializing an Image Object
-        self.__image = image.copy()
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Initializing the line detector
@@ -73,7 +72,7 @@ class ClockHandsExtractor:
         # Selecting lines that are clock hands
         self.__select_clock_hands(lines)
 
-        return self.__clock_hands if self.__clock_hands else None
+        return self.__clock_hands
 
     def __select_clock_hands(
         self, lines: list[list[tuple[int, int, int, int]]]
@@ -112,7 +111,9 @@ class ClockHandsExtractor:
 
                 # Update existing tilt coefficients
                 angles.add(angle)
-        self.__clock_hands = ClockHands(hands_coordinates)
+
+        if hands_coordinates:
+            self.__clock_hands = ClockHands(hands_coordinates)
 
     def __shortest_distance(
         self,
@@ -151,7 +152,9 @@ class ClockHandsExtractor:
 
     @staticmethod
     def show_lines(
-        image: np.array, lines: list[list[tuple[int, int, int, int]]] | ClockHands, show: bool = True
+        image: np.array,
+        lines: list[list[tuple[int, int, int, int]]] | ClockHands,
+        show: bool = True,
     ) -> np.array:
         """
         Draw the extracted lines on given image.
