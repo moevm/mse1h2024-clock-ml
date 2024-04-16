@@ -23,7 +23,7 @@ class Core:
         )
         self.__rabbitMQService = rabbitModule.RabbitmMQService(self.__estimator)
 
-    async def start(self) -> None:
+    def start(self) -> None:
         """Run the REST-API service"""
 
         self.__restAPIService.run()
