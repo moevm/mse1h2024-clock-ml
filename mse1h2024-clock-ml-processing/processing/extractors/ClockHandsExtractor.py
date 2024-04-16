@@ -171,7 +171,7 @@ class ClockHandsExtractor:
         # Iterate over points
         for points in lines:
             # Extracted points nested in the list
-            x1, y1, x2, y2 = points[0]
+            x1, y1, x2, y2 = points
 
             # Drawing the lines
             cv2.line(
