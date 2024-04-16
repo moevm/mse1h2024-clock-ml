@@ -7,6 +7,7 @@ from processing.extractors.ClockCircleExtractor import ClockCircleExtractor
 from processing.extractors.ClockHandsExtractor import ClockHandsExtractor
 from processing.extractors.ClockDigitsExtractor import ClockDigitsExtractor
 from processing.const.const import *
+from processing.objects.objects import *
 
 
 class Estimator:
@@ -16,15 +17,14 @@ class Estimator:
         self.__clock_circle_extrator = ClockCircleExtractor()
         self.__clock_hands_extractor = ClockHandsExtractor()
         self.__clock_digits_extractor = ClockDigitsExtractor()
-        self.__extracted_digits_angles = {}
-        self.__clock_hands_angles = {
-            "hour": 0,
-            "minute": 0,
-        }
         self.__time = {
             "hour": 11,
             "minute": 1,
         }  # TODO: read and parse time from backend
+
+    def __parse_time(self):
+        # TODO: parsing time
+        pass
 
     def estimate(self, image: np.array, time: int = 0) -> int:
         """_summary_
@@ -41,30 +41,30 @@ class Estimator:
 
         digits = self.__clock_digits_extractor.extract(image)
         circle = self.__clock_circle_extrator.extract(image)
-        # # uncomment for logging
-        # self.__clock_digits_extractor.show_recognition(image, digits)
+        # uncomment for logging
+        self.__clock_digits_extractor.show_recognition(image, digits)
 
         if circle is not None:
-            # # uncomment for logging
-            # self.__clock_circle_extrator.show_circles(image, [circle])
-            center = circle[0:2]
-            radius = circle[2]
-            hands = self.__clock_hands_extractor.extract(image, circle[0:2], circle[2])
-            self.__define_clock_hands_angle(hands, center)
+            # uncomment for logging
+            self.__clock_circle_extrator.show_circles(image, [circle])
+            clock_center = circle.center_coordinates
+            clock_radius = circle.radius
+            hands = self.__clock_hands_extractor.extract(image, clock_center, clock_radius)
+            hands.define_angle(clock_center)
 
-            # # uncomment for logging
-            # self.__clock_hands_extractor.show_lines(image, hands)
+            # uncomment for logging
+            self.__clock_hands_extractor.show_lines(image, hands)
 
         # 1 балл - Нет чисел (нарисовали все что угодно, но не числа (хотя бы одно)):
         if digits is None:
             estimation_result = 1
 
         if circle is not None:
-            digits_count = len(digits)
-            digits_in_circle = self.__digits_in_circle(digits, center, radius)
+            digits_count = len(digits.digits)
+            digits_in_circle = self.__digits_in_circle(digits, circle)
             digits_in_circle_count = len(digits_in_circle)
             digits_around_circumference = self.__digits_around_circumference(
-                digits, center, radius
+                digits, circle
             )
             digits_around_circumference_count = len(digits_around_circumference)
 
@@ -73,15 +73,15 @@ class Estimator:
                 estimation_result = 2
 
             # 3 балл - Количество чисел более 6 и все вне круга;
-            if digits_count >= 6 and digits_in_circle_count < len(digits) - 6:
-                # self.__clock_digits_extractor.show_recognition(image, self.__digits_in_circle(digits, center, radius))
+            if digits_count >= 6 and digits_in_circle_count < digits_count - 6:
+                # self.__clock_digits_extractor.show_recognition(image, self.__digits_in_circle(digits, center, clock_radius))
                 estimation_result = 3
 
             # 4 балл - Количество чисел более 9, в круге более 6 чисел
             if (digits_count >= 9 and digits_in_circle_count == digits_count) or (
                 digits_count >= 11 and digits_in_circle_count >= digits_count / 2
             ):
-                # self.__clock_digits_extractor.show_recognition(image, self.__digits_in_circle(digits, center, radius))
+                # self.__clock_digits_extractor.show_recognition(image, self.__digits_in_circle(digits, center, clock_radius))
                 estimation_result = 4
 
             # 5 балл - Числа все внутри циферблата по окружности
@@ -93,18 +93,18 @@ class Estimator:
                 estimation_result = 5
 
                 # 6 балл - числа на своих местах
-                self.__define_digits_angle(digits, center)
-                if self.__is_all_number_positions_correct():
+                digits.define_angle(clock_center)
+                if self.__is_all_number_positions_correct(digits):
                     estimation_result = 6
-                    if hands is not None and len(hands) == 2:
+                    if hands is not None and hands.get_clock_hands_count() == 2:
                         # 10 баллов - стрелки с погрешностью 0-15 градусов
-                        if self.__check_time(15, 15):
+                        if self.__check_time(15, 15, digits, hands):
                             estimation_result = 10
                         # 9 баллов - стрелки с погрешностью 0-15 градусов на часовой, 16-30 на минутной
-                        elif self.__check_time(15, 30):
+                        elif self.__check_time(15, 30, digits, hands):
                             estimation_result = 9
                         # 8 баллов - стрелки с погрешностью 16-30
-                        elif self.__check_time(30, 30):
+                        elif self.__check_time(30, 30, digits, hands):
                             estimation_result = 8
                         # 7 баллов - стрелки с погрешностью 30+
                         else:
@@ -112,7 +112,7 @@ class Estimator:
 
         return estimation_result
 
-    def __check_time(self, delta_angle_hour: int, delta_angle_minute: int) -> bool:
+    def __check_time(self, delta_angle_hour: int, delta_angle_minute: int, digits: ClockDigits, clock_hands: ClockHands) -> bool:
         """_summary_
 
         Args:
@@ -127,108 +127,64 @@ class Estimator:
         hour = self.__time["hour"]
 
         if (
-            hour in self.__extracted_digits_angles
-            and minute in self.__extracted_digits_angles
+            hour in digits.angles
+            and minute in digits.angles
         ):
             # Нашли оба числа
-            hour_angle = self.__extracted_digits_angles[hour]
-            minute_angle = self.__extracted_digits_angles[minute]
+            hour_angle = digits.angles[hour]
+            minute_angle = digits.angles[minute]
             return CHECK_ANGLE(
-                hour_angle, delta_angle_hour, self.__clock_hands_angles["hour"]
+                hour_angle, delta_angle_hour, clock_hands.hour_angle
             ) and CHECK_ANGLE(
-                minute_angle, delta_angle_minute, self.__clock_hands_angles["minute"]
+                minute_angle, delta_angle_minute, clock_hands.minute_angle
             )
-        elif hour in self.__extracted_digits_angles:
+        elif hour in digits.angles:
             # Нашли только часовое число
-            hour_angle = self.__extracted_digits_angles[hour]
+            hour_angle = digits.angles[hour]
             return CHECK_ANGLE(
-                hour_angle, delta_angle_hour, self.__clock_hands_angles["hour"]
+                hour_angle, delta_angle_hour, clock_hands.hour_angle
             )
-        elif minute in self.__extracted_digits_angles:
+        elif minute in digits.angles:
             # Только минутная
-            minute_angle = self.__extracted_digits_angles[minute]
+            minute_angle = digits.angles[minute]
             return CHECK_ANGLE(
-                minute_angle, delta_angle_minute, self.__clock_hands_angles["minute"]
+                minute_angle, delta_angle_minute, clock_hands.minute_angle
             )
         else:
             # Ни одна из стрелок
             return False
 
-    def __digits_in_circle(self, digits, center, radius):
-        is_in_circle = lambda point: radius > np.sqrt(
-            (point[0] - center[0]) ** 2 + (point[1] - center[1]) ** 2
+    def __digits_in_circle(self, digits: ClockDigits, clock_circle: ClockCircle):
+        is_in_circle = lambda point: clock_circle.radius > np.sqrt(
+            (point[0] - clock_circle.center_coordinates[0]) ** 2 + (point[1] - clock_circle.center_coordinates[1]) ** 2
         )
         in_circle = []
-        for digit in digits:
+        for digit in digits.digits:
             digit_box = digit[0]
             if len(list(filter(is_in_circle, digit_box))) > 0:
                 in_circle.append(digit)
 
         return in_circle
 
-    def __digits_around_circumference(self, digits, center, radius):
-        is_around_circumference = lambda point: radius / 3 <= np.sqrt(
-            (point[0] - center[0]) ** 2 + (point[1] - center[1]) ** 2
+    def __digits_around_circumference(self, digits: ClockDigits, clock_circle: ClockCircle):
+        is_around_circumference = lambda point: clock_circle.radius / 3 <= np.sqrt(
+            (point[0] - clock_circle.center_coordinates[0]) ** 2 + (point[1] - clock_circle.center_coordinates[1]) ** 2
         )
         around_circumference = []
-        for digit in digits:
+        for digit in digits.digits:
             digit_box = digit[0]
             if len(list(filter(is_around_circumference, digit_box))) > 0:
                 around_circumference.append(digit)
 
         return around_circumference
 
-    def __define_digits_angle(self, digits, center):
-        for digit in digits:
-            digit_number = int(digit[1])
-            ([x1, y1], [x2, y2], [x3, y3], [x4, y4]) = digit[0]
-            digit_center = ((x1 + x2) / 2, (y1 + y3) / 2)
-
-            dx = digit_center[0] - center[0]
-            dy = digit_center[1] - center[1]
-            angle = np.arctan2(dx, -dy)
-            angle_degrees = np.round(np.degrees(angle), 3)
-            if angle_degrees < 0:
-                angle_degrees += 360.0
-
-            self.__extracted_digits_angles[digit_number] = angle_degrees
-
-    def __define_clock_hands_angle(self, clock_hands, center):
-        # [(x1, y1, x2, y2)]
-        hands = []
-        for clock_hand in clock_hands:
-            (x1, y1, x2, y2) = clock_hand
-            x_start, x_end = (
-                (x1, x2) if abs(center[0] - x1) < abs(center[0] - x2) else (x2, x1)
-            )
-            y_start, y_end = (
-                (y1, y2) if abs(center[1] - y1) < abs(center[1] - y2) else (y2, y1)
-            )
-            dx = x_end - x_start
-            dy = y_end - y_start
-            clock_hand_length = np.sqrt(dx**2 + dy**2)
-
-            angle = np.arctan2(dx, -dy)
-            angle_degrees = np.round(np.degrees(angle), 3)
-            if angle_degrees < 0:
-                angle_degrees += 360.0
-            hands.append((clock_hand_length, angle_degrees))
-
-        hands = sorted(hands, key=lambda elem: elem[0])
-        self.__clock_hands_angles["hour"] = hands[0][1]
-        self.__clock_hands_angles["minute"] = hands[1][1]
-
-    def __parse_time(self):
-        # TODO: parsing time
-        pass
-
-    def __is_all_number_positions_correct(self) -> bool:
+    def __is_all_number_positions_correct(self, digits: ClockDigits) -> bool:
         """_summary_
 
         Returns:
             bool: _description_
         """
-        for digit, angle in self.__extracted_digits_angles.items():
+        for digit, angle in digits.angles.items():
             if digit in REFERENCE_DIGITS_ANGLES:
                 if not CHECK_ANGLE(
                     REFERENCE_DIGITS_ANGLES[digit], DELTA_DIGIT_ANGLE, angle
