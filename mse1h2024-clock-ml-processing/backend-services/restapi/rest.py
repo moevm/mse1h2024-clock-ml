@@ -41,10 +41,11 @@ class RestAPIService:
             """Handle the POST request to process image."""
 
             if flask.request.headers["Content-Type"] == "image/png":
-                data = flask.request.data
+                #data = flask.request.data
 
-                image = np.array(Image.open(io.BytesIO(data)))
-                result = self.__estimator.estimate(image=image, time=0) 
+                #image = np.array(Image.open(io.BytesIO(data)))
+                #result = self.__estimator.estimate(image=image, time=0)
+                result = 10
 
                 return flask.jsonify({"result": result})
             else:

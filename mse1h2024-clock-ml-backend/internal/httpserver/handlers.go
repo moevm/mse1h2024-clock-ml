@@ -52,19 +52,19 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			return
 		}
 
-		request.Hours, err = strconv.Atoi(r.FormValue(hoursParam))
+		/*request.Hours, err = strconv.Atoi(r.FormValue(hoursParam))
 		if err != nil {
 			logger.Log(r.Context(), slog.LevelInfo, "failed to get hours param", slog.Any("error", err))
 			httpError(w, "invalid hours param", http.StatusBadRequest)
 			return
-		}
+		} */
 
-		request.Minutes, err = strconv.Atoi(r.FormValue(minutesParam))
+		/*request.Minutes, err = strconv.Atoi(r.FormValue(minutesParam))
 		if err != nil {
 			logger.Log(r.Context(), slog.LevelInfo, "failed to get minutes param", slog.Any("error", err))
 			httpError(w, "invalid minutes param", http.StatusBadRequest)
 			return
-		}
+		} */
 
 		request.Image, err = io.ReadAll(file)
 		if err != nil {
