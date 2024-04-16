@@ -12,5 +12,9 @@ class TestEstimator:
         image_filename = f"tests/images/{estimation_result}.png"
         image = cv2.imread(filename=image_filename)
 
-        result = self.estimator.estimate(image=image, time=0)
+        try:
+            result = self.estimator.estimate(image=image, time=0)
+        except Exception as e:
+            print(f"Some problem in estimator: {e}")
+
         assert result == estimation_result
