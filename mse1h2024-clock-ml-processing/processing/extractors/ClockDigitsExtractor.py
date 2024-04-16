@@ -71,7 +71,7 @@ class ClockDigitsExtractor:
         self.__digits = ClockDigits(digits=extracted_digits)
         
 
-        return self.__digits if self.__digits else None
+        return self.__digits if extracted_digits else None
         
     @staticmethod
     def show_without_digits(image: np.array, boundaries: list[list[int, int, int, int]], show: bool = True) -> np.array:
