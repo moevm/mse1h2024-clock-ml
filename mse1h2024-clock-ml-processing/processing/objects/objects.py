@@ -18,6 +18,9 @@ class ClockCircle:
     def radius(self) -> int:
         return self._radius
 
+    def __str__(self) -> str:
+        return f"Center coordinates = {self._center_coordinates}" + "\n" + f"Radius = {self._radius}"
+
 
 class ClockHands:
     def __init__(self, lines: list[tuple[int, int, int, int]]) -> None:
@@ -68,6 +71,9 @@ class ClockHands:
         hands_description = sorted(hands_description, key=lambda elem: elem[0])
         self._angles["hour"] = hands_description[0][1]
         self._angles["minute"] = hands_description[1][1]
+    
+    def __str__(self) -> str:
+        return f"First line {self._lines[0]}" + "\n" + f"Second line {self._lines[1]}"
 
 
 class ClockDigits:
@@ -119,3 +125,8 @@ class ClockDigits:
                 angle_degrees += 360.0
 
             self._angles[digit_number] = angle_degrees
+
+    def __str__(self) -> str:
+        digit_list = [digit[1] for digit in self._digits]
+        return f"digits = {digit_list}"
+        
