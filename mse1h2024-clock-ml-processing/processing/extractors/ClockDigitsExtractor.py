@@ -2,6 +2,7 @@
 import easyocr
 import cv2
 import numpy as np
+from processing.objects.objects import ClockDigits
 
 
 class ClockDigitsExtractor:
@@ -10,7 +11,7 @@ class ClockDigitsExtractor:
     def __init__(self) -> None:
         """Initialization the DigitsPositionExtractor."""
 
-        self.__digits = list()
+        self.__digits = None
         self.__boundaries = list()
 
         # Initialize an easyocr.Reader object with GPU permission
@@ -46,10 +47,9 @@ class ClockDigitsExtractor:
 
         return self.__boundaries if self.__boundaries else None
         
-    def extract(self, image: np.array) -> list[tuple[list[list[int, int], list[int, int], list[int, int], list[int, int]], str, int]] | None:
+    def extract(self, image: np.array) -> ClockDigits | None:
         """
         This method returns the recognized numbers and their corresponding bounds.
-        The boundaries is represented by a list in the following format: [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
 
         Parameters
         ----------
@@ -57,7 +57,7 @@ class ClockDigitsExtractor:
             Image object from which numbers are read
         """
         
-        self.__digits = self.__reader.readtext(
+        extracted_digits = self.__reader.readtext(
             image=image,
             allowlist="0123456789",
             decoder='beamsearch',
@@ -68,6 +68,8 @@ class ClockDigitsExtractor:
             width_ths=0.1,
             add_margin=0.23,
         )
+        self.__digits = ClockDigits(digits=extracted_digits)
+        
 
         return self.__digits if self.__digits else None
         
@@ -120,16 +122,15 @@ class ClockDigitsExtractor:
         return image_with_boxes
 
     @staticmethod
-    def show_recognition(image: np.array, recognition: list[tuple[list[list[int, int], list[int, int], list[int, int], list[int, int]], str, int]], show: bool = True) -> np.array:
+    def show_recognition(image: np.array, recognition: ClockDigits, show: bool = True) -> np.array:
         """
             This method creates a new image based on the original one, draws the boundaries of the found numbers
             and their recognition on it, and then displays the image on the screen.
-            The boundaries is represented by a list in the following format: [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
         """
 
         image_with_recognize_and_boxes = image.copy()
         # Loop through recognized results
-        for detection in recognition:
+        for detection in recognition.digits:
             # Extract bounding box coordinates and recognized text
             top_left = tuple(map(int, detection[0][0]))
             bottom_right = tuple(map(int, detection[0][2]))
