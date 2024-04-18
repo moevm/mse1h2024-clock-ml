@@ -23,7 +23,9 @@ export const Controls: FC<IControls> = ({ onClear, onSubmit }) => {
 				<input type="checkbox" checked={broker} onChange={() => setBroker((a) => !a)} />
 			</label>
 
-			<Button onClick={onClear}>Стереть все</Button>
+			<Button onClick={onClear} id="canvas-clear">
+				Стереть все
+			</Button>
 			<Link to="/result" onClick={onSubmit}>
 				Отправить
 			</Link>
