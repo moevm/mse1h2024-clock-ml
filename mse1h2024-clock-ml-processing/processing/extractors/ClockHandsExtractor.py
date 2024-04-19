@@ -1,6 +1,7 @@
 # import requirements
 import cv2
 import numpy as np
+from processing.objects.objects import ClockHands
 
 
 class ClockHandsExtractor:
@@ -9,17 +10,17 @@ class ClockHandsExtractor:
     def __init__(self, angle_eps: float = 5) -> None:
         """Initialization the ClockHandsExtractor."""
 
-        # Initializing an Image Object
-        self.__image = None
-
         # Initializing a clock hands list
-        self.__clock_hands = list()
+        self.__clock_hands = None
 
         # Initializing a basic constants
         self.__angle_eps = np.radians(angle_eps)
         self.__center = None
         self.__center_eps = None
         self.__min_clock_hand_length = None
+
+    def __clear_previous(self):
+        self.__clock_hands = None
 
     def __set_constants(self, center: list[int, int], radius: int) -> None:
         """This method sets basic constants"""
@@ -30,7 +31,7 @@ class ClockHandsExtractor:
 
     def extract(
         self, image: np.array, center: list[int, int], radius: int
-    ) -> list[tuple] | None:
+    ) -> ClockHands | None:
         """
         This method extracts clock hands from an image.
 
@@ -43,12 +44,11 @@ class ClockHandsExtractor:
         radius : int
             Radius of the dial or the maximum circle inscribed in the image
         """
-
+        self.__clear_previous()
         # set given parameters for extracting
         self.__set_constants(center, radius)
 
         # Initializing an Image Object
-        self.__image = image.copy()
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         # Initializing the line detector
@@ -72,7 +72,7 @@ class ClockHandsExtractor:
         # Selecting lines that are clock hands
         self.__select_clock_hands(lines)
 
-        return self.__clock_hands if self.__clock_hands else None
+        return self.__clock_hands
 
     def __select_clock_hands(
         self, lines: list[list[tuple[int, int, int, int]]]
@@ -90,6 +90,7 @@ class ClockHandsExtractor:
         # Initializing set tilt coefficients for recognized clock hands
         angles = set()
 
+        hands_coordinates = []
         for line in lines:
             (x1, y1, x2, y2) = line[0]
             angle = np.arctan2(abs(y1 - y2), abs(x1 - x2))
@@ -101,15 +102,18 @@ class ClockHandsExtractor:
                 >= self.__min_clock_hand_length
                 and not self.__is_exist_angle(angle, angles)
             ):
-                print(self.__shortest_distance(self.__center, (x1, y1), (x2, y2)))
+                # print(self.__shortest_distance(self.__center, (x1, y1), (x2, y2)))
                 # Add new line to clock hands
-                self.__clock_hands.append((x1, y1, x2, y2))
+                hands_coordinates.append((x1, y1, x2, y2))
                 point = self.__shortest_distance(self.__center, (x1, y1), (x2, y2))[1]
                 # self.show_lines(self.__image, [line, [(*self.__center, *point)]])
                 # self.show_lines(self.__image, [[(*self.__center, *point)]])
 
                 # Update existing tilt coefficients
                 angles.add(angle)
+
+        if hands_coordinates:
+            self.__clock_hands = ClockHands(hands_coordinates)
 
     def __shortest_distance(
         self,
@@ -148,7 +152,9 @@ class ClockHandsExtractor:
 
     @staticmethod
     def show_lines(
-        image: np.array, lines: list[list[tuple[int, int, int, int]]], show: bool = True
+        image: np.array,
+        lines: list[list[tuple[int, int, int, int]]] | ClockHands,
+        show: bool = True,
     ) -> np.array:
         """
         Draw the extracted lines on given image.
@@ -169,9 +175,11 @@ class ClockHandsExtractor:
 
         image_with_lines = image.copy()
         # Iterate over points
+        if isinstance(lines, ClockHands):
+            lines = lines.clock_hands
         for points in lines:
             # Extracted points nested in the list
-            x1, y1, x2, y2 = points[0]
+            x1, y1, x2, y2 = points
 
             # Drawing the lines
             cv2.line(
