@@ -12,6 +12,7 @@ import { scoreAtom } from "../../atoms/score";
 import { brokerAtom } from "../../atoms/broker";
 import { useNavigate } from "react-router-dom";
 import { imgAtom } from "../../atoms/image";
+import { timeAtom } from "../../atoms/time";
 
 export const CanvasPage = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -20,6 +21,7 @@ export const CanvasPage = () => {
 	const broker = useAtomValue(brokerAtom);
 	const setScore = useSetAtom(scoreAtom);
 	const setImage = useSetAtom(imgAtom);
+	const time = useAtomValue(timeAtom);
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -45,14 +47,12 @@ export const CanvasPage = () => {
 			const form = new FormData();
 			form.append("file", blob!, "clock.png");
 			form.append("broker", String(broker));
+			form.append("hours", time[0]);
+			form.append("minutes", time[1]);
 
-			sendForm<IEstimationResponse>("/get-estimation", form)
-				.then((res) => {
-					setScore(res.result);
-				})
-				.catch(() => {
-					// TODO обработка ошибки
-				});
+			sendForm<IEstimationResponse>("/get-estimation", form).then((res) => {
+				setScore(res.result);
+			});
 
 			navigate("/result");
 			setImage(URL.createObjectURL(blob!));
