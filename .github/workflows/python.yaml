@@ -18,4 +18,5 @@ jobs:
       - name: Test
         run: |
           pip install pytest
+          cd mse1h2024-clock-ml-processing
           pytest .
