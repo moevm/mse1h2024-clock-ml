@@ -2,6 +2,7 @@ package rabbitmq
 
 import (
 	"backend/internal/logger"
+	"bytes"
 	"context"
 	"github.com/google/uuid"
 	"log/slog"
@@ -20,7 +21,7 @@ type Publisher struct {
 }
 
 // PublishMessage publishes a message to the specified rabbitmq queue.
-func (p *Publisher) PublishMessage(ctx context.Context, body []byte, contentType string) (int, error) {
+func (p *Publisher) PublishMessage(ctx context.Context, body *bytes.Buffer, contentType string) (int, error) {
 	q, err := p.channel.QueueDeclare(
 		"",
 		false,
@@ -61,7 +62,7 @@ func (p *Publisher) PublishMessage(ctx context.Context, body []byte, contentType
 			ContentType:   contentType,
 			CorrelationId: correlationID,
 			ReplyTo:       q.Name,
-			Body:          body,
+			Body:          body.Bytes(),
 		},
 	)
 
