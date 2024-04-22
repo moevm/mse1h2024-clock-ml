@@ -24,7 +24,7 @@ class Estimator:
 
     def __parse_time(self, time: tuple[int, int]) -> None:
         self.__time["hour"] = time[0]
-        self.__time["minute"] = time[1]
+        self.__time["minute"] = 12 if time[1] == 0 else time[1] // 5
 
     def estimate(self, image: np.array, time: tuple[int, int]) -> int:
         """_summary_
@@ -36,7 +36,7 @@ class Estimator:
         Returns:
             int: _description_
         """
-        
+
         self.__parse_time(time)
 
         estimation_result = 0
