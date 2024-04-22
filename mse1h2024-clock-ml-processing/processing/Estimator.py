@@ -20,13 +20,13 @@ class Estimator:
         self.__time = {
             "hour": 11,
             "minute": 1,
-        }  # TODO: read and parse time from backend
+        }
 
-    def __parse_time(self):
-        # TODO: parsing time
-        pass
+    def __parse_time(self, time: tuple[int, int]) -> None:
+        self.__time["hour"] = time[0]
+        self.__time["minute"] = time[1]
 
-    def estimate(self, image: np.array, time: int = 0) -> int:
+    def estimate(self, image: np.array, time: tuple[int, int]) -> int:
         """_summary_
 
         Args:
@@ -36,6 +36,8 @@ class Estimator:
         Returns:
             int: _description_
         """
+        
+        self.__parse_time(time)
 
         estimation_result = 0
 
