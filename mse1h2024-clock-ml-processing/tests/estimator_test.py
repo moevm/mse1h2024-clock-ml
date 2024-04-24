@@ -13,7 +13,7 @@ class TestEstimator:
         image = cv2.imread(filename=image_filename)
 
         try:
-            result = self.estimator.estimate(image=image, time=0)
+            result = self.estimator.estimate(image=image, time=(11, 5))
         except Exception as e:
             print(f"Some problem in estimator: {e}")
 
