@@ -1,7 +1,11 @@
+import io
+import numpy as np
 import pika
+import werkzeug
+from PIL import Image
 
 
-class RabbitmMQService:
+class RabbitMQService:
     def __init__(self, estimator):
         self.__estimator = estimator
 
@@ -18,7 +22,24 @@ class RabbitmMQService:
         channel.queue_declare(queue='estimation')
 
         def on_request(ch, method, props, body):
-            response = 10
+            _, form, files = werkzeug.formparser.parse_form_data({
+                'wsgi.input': io.BufferedReader(io.BytesIO(body)),
+                'CONTENT_LENGTH': str(len(body)),
+                'CONTENT_TYPE': props.content_type,
+                'REQUEST_METHOD': 'POST'
+            }, silent=False)
+
+            # print(body.decode('utf-8'), flush=True)
+
+            hours = form.get('hours')
+            minutes = form.get('minutes')
+            # print(hours, minutes, flush=True)
+            try:
+                response = self.__estimator.estimate(
+                    image=np.array(Image.open(io.BytesIO(files.get('file').read())))
+                )
+            except Exception as e:
+                response = "Failed to process image"
 
             ch.basic_publish(exchange='',
                              routing_key=props.reply_to,

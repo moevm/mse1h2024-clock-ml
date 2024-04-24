@@ -21,7 +21,7 @@ class Core:
         self.__restAPIService = restAPIModule.RestAPIService(
            estimator=self.__estimator,
         )
-        self.__rabbitMQService = rabbitModule.RabbitmMQService(self.__estimator)
+        self.__rabbitMQService = rabbitModule.RabbitMQService(self.__estimator)
 
     def start(self) -> None:
         """Run the REST-API service"""

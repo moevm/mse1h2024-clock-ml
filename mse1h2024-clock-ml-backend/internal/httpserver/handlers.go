@@ -86,7 +86,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 			result, err = rabbit.PublishMessage(r.Context(), message, contentType)
 		} else {
 			logger.Log(r.Context(), slog.LevelInfo, "sending image using restapi")
-			result, err = rest.SendPictureRequest(r.Context(), request.Image)
+			result, err = rest.SendPictureRequest(r.Context(), message, contentType)
 		}
 
 		if err != nil {
@@ -103,7 +103,7 @@ func SendPicture(rabbit rabbitmq.Publisher, rest restapi.Service) func(w http.Re
 	}
 }
 
-func generateMessage(request ImageRequest) ([]byte, string, error) {
+func generateMessage(request ImageRequest) (*bytes.Buffer, string, error) {
 	body := &bytes.Buffer{}
 
 	writer := multipart.NewWriter(body)
@@ -128,7 +128,7 @@ func generateMessage(request ImageRequest) ([]byte, string, error) {
 		return nil, "", err
 	}
 
-	return body.Bytes(), writer.FormDataContentType(), nil
+	return body, writer.FormDataContentType(), nil
 }
 
 func httpError(w http.ResponseWriter, message string, code int) {

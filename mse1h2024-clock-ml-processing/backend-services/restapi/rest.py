@@ -40,18 +40,21 @@ class RestAPIService:
         def callEstimator():
             """Handle the POST request to process image."""
 
-            if flask.request.headers["Content-Type"] == "image/png":
-                #data = flask.request.data
+            if "multipart/form-data" in flask.request.headers["Content-Type"]:
+                try:
+                    # hours = flask.request.form.hours
+                    # minutes = flask.request.form.minutes
+                    result = self.__estimator.estimate(
+                        image=np.array(Image.open(io.BytesIO(flask.request.files['file'].stream.read())))
+                    )
 
-                #image = np.array(Image.open(io.BytesIO(data)))
-                #result = self.__estimator.estimate(image=image, time=0)
-                result = 10
-
-                return flask.jsonify({"result": result})
+                    return flask.jsonify({"result": result})
+                except:
+                    return flask.jsonify({"error": "Failed to process image"})
             else:
                 return (
                     flask.jsonify(
-                        {"error": "Only image/png can be accepted"},
+                        {"error": "Only multipart/form-data can be accepted"},
                     ),
                     400,
                 )
