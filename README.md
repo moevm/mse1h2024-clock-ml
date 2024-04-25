@@ -21,4 +21,6 @@ docker-compose build && docker-compose up
 Презентация по итогам второй итерации расположена по следующей ссылке: https://docs.google.com/presentation/d/1j1_87Uv0fEpcExKYiFLr_5FNqMDgb5Gw/edit?usp=sharing&ouid=111427935539197861932&rtpof=true&sd=true
 
 ## Итерация 3
+
+### Презентация
 Презентация по итогам третьей итерации расположена по следующей ссылке: https://docs.google.com/presentation/d/1C0vjtDFfpSiug6lsrH-bZBM0-QH0U1Yb/edit?usp=sharing&ouid=111427935539197861932&rtpof=true&sd=true
