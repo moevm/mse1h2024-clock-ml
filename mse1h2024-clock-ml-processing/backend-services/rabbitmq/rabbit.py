@@ -29,17 +29,17 @@ class RabbitMQService:
                 'REQUEST_METHOD': 'POST'
             }, silent=False)
 
-            # print(body.decode('utf-8'), flush=True)
 
-            hours = form.get('hours')
-            minutes = form.get('minutes')
-            # print(hours, minutes, flush=True)
+            hours = int(form.get('hours'))
+            minutes = int(form.get('minutes'))
             try:
                 response = self.__estimator.estimate(
-                    image=np.array(Image.open(io.BytesIO(files.get('file').read())))
+                    image=np.array(Image.open(io.BytesIO(files.get('file').read()))),
+                    time=(hours, minutes)
                 )
             except Exception as e:
                 response = "Failed to process image"
+                print(e, flush=True)
 
             ch.basic_publish(exchange='',
                              routing_key=props.reply_to,
