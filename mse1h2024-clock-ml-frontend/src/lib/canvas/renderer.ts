@@ -1,7 +1,9 @@
 import { Point } from "./point";
 
 export class Renderer {
-	constructor(private ctx: CanvasRenderingContext2D) {}
+	constructor(private ctx: CanvasRenderingContext2D) {
+		this.clear();
+	}
 	private lastPoint: Point | null = null;
 
 	paint(e: MouseEvent, color: `#${string}` = "#000000", size: number) {
