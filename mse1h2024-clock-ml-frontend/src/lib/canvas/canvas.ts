@@ -19,6 +19,8 @@ export class CanvasAPI {
 		elem.addEventListener("mousemove", this.onDraw.bind(this));
 
 		this.resize(elem);
+
+		this.renderer.clear();
 	}
 
 	setTool(tool: "brush" | "eraser") {

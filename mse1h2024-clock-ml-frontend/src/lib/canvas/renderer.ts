@@ -1,9 +1,7 @@
 import { Point } from "./point";
 
 export class Renderer {
-	constructor(private ctx: CanvasRenderingContext2D) {
-		this.clear();
-	}
+	constructor(private ctx: CanvasRenderingContext2D) {}
 	private lastPoint: Point | null = null;
 
 	paint(e: MouseEvent, color: `#${string}` = "#000000", size: number) {
@@ -28,12 +26,11 @@ export class Renderer {
 	}
 
 	clear() {
-		this.ctx.beginPath();
-		this.ctx.fillStyle = "#FFFFFF";
-		this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+		console.log("clear");
 
-		this.ctx.fill();
-		this.ctx.closePath();
+		this.ctx.fillStyle = "#FFF";
+
+		this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
 	}
 
 	stop() {
