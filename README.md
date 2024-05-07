@@ -24,3 +24,8 @@ docker-compose build && docker-compose up
 
 ### Презентация
 Презентация по итогам третьей итерации расположена по следующей ссылке: https://docs.google.com/presentation/d/1C0vjtDFfpSiug6lsrH-bZBM0-QH0U1Yb/edit?usp=sharing&ouid=111427935539197861932&rtpof=true&sd=true
+
+### Скринкасты
+Скринкасты расположены по следующим ссылкам:
+https://drive.google.com/file/d/1oNA2Cdr9bn9Pm68F-xoK29EnIXuNGiVH/view?usp=drivesdk
+https://drive.google.com/file/d/1Be8CDkx_xECEZLN5_Z8qnloZlTBDPw6h/view?usp=drivesdk
