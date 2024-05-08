@@ -42,10 +42,11 @@ class RestAPIService:
 
             if "multipart/form-data" in flask.request.headers["Content-Type"]:
                 try:
-                    # hours = flask.request.form.hours
-                    # minutes = flask.request.form.minutes
+                    hours = int(flask.request.form.get("hours"))
+                    minutes = int(flask.request.form.get("minutes"))
                     result = self.__estimator.estimate(
-                        image=np.array(Image.open(io.BytesIO(flask.request.files['file'].stream.read())))
+                        image=np.array(Image.open(io.BytesIO(flask.request.files.get('file').read()))),
+                        time=(hours, minutes)
                     )
 
                     return flask.jsonify({"result": result})
