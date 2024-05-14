@@ -103,7 +103,6 @@ class ClockHandsExtractor:
                 >= self.__min_clock_hand_length
                 and not self.__is_exist_angle(angle_degrees, angles)
             ):
-                print(angle_degrees)
                 # Add new line to clock hands
                 hands_coordinates.append((x1, y1, x2, y2))
                 point = self.__shortest_distance(self.__center, (x1, y1), (x2, y2))[1]
@@ -113,7 +112,7 @@ class ClockHandsExtractor:
                 # Update existing tilt coefficients
                 angles.add(angle_degrees)
 
-        if hands_coordinates:
+        if len(hands_coordinates) == 2:
             self.__clock_hands = ClockHands(hands_coordinates)
 
     def __define_angle(self, x1, y1, x2, y2) -> float:
