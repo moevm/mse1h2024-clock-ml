@@ -49,6 +49,9 @@ class ClockCircleExtractor:
         # define clock circle as circle with maximum radius
         exctracted = np.int32(exctracted)
         largest_circle = max(exctracted, key=lambda elem: elem[2])
+        if largest_circle[2] < image.shape[0] / 5:
+            print("Not found circle with right radius")
+            return
         self.__clock_circle = ClockCircle(
             center_coordinates=largest_circle[:2], radius=largest_circle[2]
         )
