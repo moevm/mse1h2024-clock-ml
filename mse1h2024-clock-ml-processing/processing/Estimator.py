@@ -39,7 +39,7 @@ class Estimator:
 
         self.__parse_time(time)
 
-        estimation_result = 0
+        estimation_result = 1
 
         digits = self.__clock_digits_extractor.extract(image)
         circle = self.__clock_circle_extrator.extract(image)
@@ -61,10 +61,7 @@ class Estimator:
                 # self.__clock_hands_extractor.show_lines(image, hands)
 
         # 1 балл - Нет чисел (нарисовали все что угодно, но не числа (хотя бы одно)):
-        if digits is None:
-            estimation_result = 1
-
-        if circle is not None:
+        if circle is not None and digits is not None:
             digits_count = len(digits.digits)
             digits_in_circle = self.__digits_in_circle(digits, circle)
             digits_in_circle_count = len(digits_in_circle)
@@ -101,6 +98,7 @@ class Estimator:
                 digits.define_angle(clock_center)
                 if self.__is_all_number_positions_correct(digits):
                     estimation_result = 6
+                    
                     if hands is not None and hands.get_clock_hands_count() == 2:
                         # 10 баллов - стрелки с погрешностью 0-15 градусов
                         if self.__check_time(15, 15, digits, hands):
