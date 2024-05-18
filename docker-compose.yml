@@ -31,7 +31,7 @@ services:
       - ml
       - rabbitmq
     ports:
-      - "54321:54321"
+      - "746:746"
     networks:
       - default
   ml:
@@ -41,7 +41,7 @@ services:
     links:
       - rabbitmq
     ports:
-      - "22869:22869"
+      - "745:745"
     networks:
       - default
   frontend:
@@ -49,7 +49,7 @@ services:
       dockerfile: Dockerfile
       context: mse1h2024-clock-ml-frontend
     ports:
-      - "81:80"
+      - "80:80"
 
 networks:
   default:

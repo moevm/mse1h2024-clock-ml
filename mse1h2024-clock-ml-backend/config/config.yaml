@@ -2,9 +2,9 @@ app:
   name: "mse1h2024-clock-ml-backend"
   version: "1.0.0"
 http:
-  port: 54321
+  port: 746
 estimation:
   host: ml
-  port: 22869
+  port: 745
 rabbitmq:
   url: "amqp://user:password@rabbitmq:5672/"
