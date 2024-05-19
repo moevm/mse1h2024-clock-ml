@@ -18,7 +18,5 @@ COPY --from=builder /build/main /build/main
 
 ADD config/config.yaml config.yaml
 ENV CFG_PATH /build/config.yaml
-
 EXPOSE 746
-
 CMD ["./main"]
