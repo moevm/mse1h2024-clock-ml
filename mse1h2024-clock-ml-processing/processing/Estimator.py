@@ -136,14 +136,24 @@ class Estimator:
         digits: ClockDigits,
         clock_hands: ClockHands,
     ) -> bool:
-        """_summary_
+        """
+        Method for checking given time and clock hands position with a specified error for hour and minute.
 
-        Args:
-            delta_angle_hour (int): _description_
-            delta_angle_minute (int): _description_
+        Parameters
+        ----------
+        delta_angle_hour : int
+            Specified error for hour value. So, the clock hour hand should be in (digits_position - delta_angle_hour, digits_position + delta_angle_hour) range.
+        delta_angle_minute : int
+            Specified error for minute value. So, the clock minute hand should be in (digits_position - delta_angle_minute, digits_position + delta_angle_minute) range.
+        digits : ClockDigits
+            ClockDigits object for define every clock number position and angle around circle.
+        clock_hands: ClockHands
+            ClockHands object for define drawn clock time.
 
-        Returns:
-            bool: _description_
+        Returns
+        -------
+        Return True if all number position is correct with specified maximum error.
+
         """
 
         minute = self.__time["minute"]
