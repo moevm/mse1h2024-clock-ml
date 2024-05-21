@@ -95,6 +95,12 @@ class ClockHands:
         return self._angles["minute"]
 
     def define_angle(self, clock_center: list[int, int]) -> None:
+        """"This is a method of determining the angles of a clock's hands relative to their center
+
+        Args:
+            clock_center (list[int, int]): the center of the clock circle
+        """
+
         hands_description = []  # (длина стрелки, угол стрелки)
         for clock_hand in self._clock_hands:
             (x1, y1, x2, y2) = clock_hand
@@ -123,6 +129,12 @@ class ClockHands:
         self._angles["minute"] = hands_description[1][1]
 
     def __str__(self) -> str:
+        """This is a method that returns the string representation of ClockHands object
+
+        Returns:
+            str: string representation of ClockHands object
+        """
+
         return f"First line {self._clock_hands[0]}" + "\n" + f"Second line {self._clock_hands[1]}"
 
 
