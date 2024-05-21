@@ -47,8 +47,9 @@ class ClockCircle:
 
 class ClockHands:
     """Class for keeping the information about clock hands"""
-    
+
     def __init__(self, lines: list[tuple[int, int, int, int]]) -> None:
+        """Initialization the ClockHands"""
         self._clock_hands = lines.copy()
         self._angles = {"hour": 0, "minute": 0}
 
