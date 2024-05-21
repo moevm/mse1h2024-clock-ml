@@ -54,7 +54,13 @@ class ClockHands:
         self._angles = {"hour": 0, "minute": 0}
 
     @property
-    def clock_hands(self):
+    def clock_hands(self) -> list[tuple[int, int, int, int]]:
+        """This is a method that returns the clock hands
+
+        Returns:
+           list[tuple[int, int, int, int]]: a list of 2 arrows that are the coordinates of the start and end (x1, y1, x2, y2)
+        """
+        
         return self._clock_hands
 
     def get_clock_hands_count(self) -> int:
