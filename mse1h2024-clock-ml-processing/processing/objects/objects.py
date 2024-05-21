@@ -33,6 +33,11 @@ class ClockCircle:
         return self._radius
 
     def __str__(self) -> str:
+        """This is a method that returns the string representation of ClockCircle object
+
+        Returns:
+            str: string representation of ClockCircle object
+        """
         return (
             f"Center coordinates = {self._center_coordinates}"
             + "\n"
