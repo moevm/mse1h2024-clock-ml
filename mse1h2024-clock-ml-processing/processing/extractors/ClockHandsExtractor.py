@@ -20,6 +20,8 @@ class ClockHandsExtractor:
         self.__min_clock_hand_length = None
 
     def __clear_previous(self):
+        """This method clears internal variables from previous recognition"""
+
         self.__clock_hands = None
 
     def __set_constants(self, center: list[int, int], radius: int) -> None:
