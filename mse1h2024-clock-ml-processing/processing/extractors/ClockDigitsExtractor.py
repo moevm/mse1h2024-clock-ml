@@ -18,6 +18,8 @@ class ClockDigitsExtractor:
         self.__reader = easyocr.Reader(["en"], gpu=True)
 
     def __clear_previous(self):
+        """This method clears internal variables from previous recognition"""
+        
         self.__digits = None
         self.__boundaries = list()
 
