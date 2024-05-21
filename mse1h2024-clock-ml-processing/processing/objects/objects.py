@@ -16,6 +16,11 @@ class ClockCircle:
 
     @property
     def center_coordinates(self) -> tuple[int, int]:
+        """This is a method that returns the center point of the dial
+
+        Returns:
+            tuple[int, int]: point of circle center
+        """
         return self._center_coordinates
 
     @property
