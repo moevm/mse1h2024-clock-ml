@@ -152,7 +152,7 @@ class Estimator:
 
         Returns
         -------
-        Return True if all number position is correct with specified maximum error, and else otherwise.
+        Return True if all number position is correct with specified maximum error, and False otherwise.
 
         """
 
@@ -215,7 +215,23 @@ class Estimator:
 
     def __digits_around_circumference(
         self, digits: ClockDigits, clock_circle: ClockCircle
-    ):
+    ) -> list:
+        """
+        Method that defines which digits are located around the circumference of the clock circle.
+
+        Parameters
+        ----------
+        digits : ClockDigits
+            Clock digits object
+        clock_circle : ClockCircle
+            Clock circle object
+
+        Returns
+        -------
+        list
+            List of digits that are located around the circumference of the clock circle.
+        """
+
         is_around_circumference = lambda point: clock_circle.radius / 3 <= np.sqrt(
             (point[0] - clock_circle.center_coordinates[0]) ** 2
             + (point[1] - clock_circle.center_coordinates[1]) ** 2
@@ -229,11 +245,20 @@ class Estimator:
         return around_circumference
 
     def __is_all_number_positions_correct(self, digits: ClockDigits) -> bool:
-        """_summary_
-
-        Returns:
-            bool: _description_
         """
+        Method that checks if all number positions are correct according to reference angles.
+
+        Parameters
+        ----------
+        digits : ClockDigits
+            Clock digits object
+
+        Returns
+        -------
+        bool
+            True if all number positions are correct, False otherwise.
+        """
+
         for digit, angle in digits.angles.items():
             if digit in REFERENCE_DIGITS_ANGLES:
                 if not CHECK_ANGLE(
