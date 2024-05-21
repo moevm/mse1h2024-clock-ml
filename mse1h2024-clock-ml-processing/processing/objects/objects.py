@@ -69,17 +69,29 @@ class ClockHands:
         Returns:
             int: clock hands count
         """
-        
+
         if self._clock_hands:
             return len(self._clock_hands)
         return 0
 
     @property
-    def hour_angle(self):
+    def hour_angle(self) -> float:
+        """This is a method that returns the hour clock hand angle
+
+        Returns:
+            float: hour clock hand angle
+        """
+
         return self._angles["hour"]
 
     @property
-    def minute_angle(self):
+    def minute_angle(self) -> float:
+        """This is a method that returns the minute clock hand angle
+
+        Returns:
+            float: minute clock hand angle
+        """
+
         return self._angles["minute"]
 
     def define_angle(self, clock_center: list[int, int]) -> None:
