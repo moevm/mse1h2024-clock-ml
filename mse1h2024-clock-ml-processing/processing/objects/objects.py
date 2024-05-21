@@ -4,6 +4,8 @@ from typing import Union
 
 
 class ClockCircle:
+    """Class for keeping the information about clock circle"""
+    
     def __init__(
         self, center_coordinates: Union[tuple, list, np.ndarray], radius: int
     ) -> None:
