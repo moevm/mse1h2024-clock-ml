@@ -25,6 +25,11 @@ class ClockCircle:
 
     @property
     def radius(self) -> int:
+        """This is a method that returns the radius of the dial
+
+        Returns:
+            int: radius value
+        """
         return self._radius
 
     def __str__(self) -> str:
