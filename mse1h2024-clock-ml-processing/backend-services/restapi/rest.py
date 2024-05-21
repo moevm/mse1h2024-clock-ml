@@ -30,7 +30,7 @@ class RestAPIService:
 
         self.__app.run(
             host="0.0.0.0",
-            port=22869,
+            port=745,
         )
 
     def __registerRoutes(self) -> None:
