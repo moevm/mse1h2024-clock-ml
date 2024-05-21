@@ -14,7 +14,7 @@ class ClockHandsExtractor:
         self.__clock_hands = None
 
         # Initializing a basic constants
-        self.__angle_eps = np.radians(angle_eps)
+        self.__angle_eps = angle_eps
         self.__center = None
         self.__center_eps = None
         self.__min_clock_hand_length = None
@@ -93,16 +93,16 @@ class ClockHandsExtractor:
         hands_coordinates = []
         for line in lines:
             (x1, y1, x2, y2) = line[0]
-            angle = np.arctan2(abs(y1 - y2), abs(x1 - x2))
+
+            angle_degrees = self.__define_angle(x1, y1, x2, y2)
 
             if (
                 self.__shortest_distance(self.__center, (x1, y1), (x2, y2))[0]
                 <= self.__center_eps
                 and np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
                 >= self.__min_clock_hand_length
-                and not self.__is_exist_angle(angle, angles)
+                and not self.__is_exist_angle(angle_degrees, angles)
             ):
-                # print(self.__shortest_distance(self.__center, (x1, y1), (x2, y2)))
                 # Add new line to clock hands
                 hands_coordinates.append((x1, y1, x2, y2))
                 point = self.__shortest_distance(self.__center, (x1, y1), (x2, y2))[1]
@@ -110,10 +110,31 @@ class ClockHandsExtractor:
                 # self.show_lines(self.__image, [[(*self.__center, *point)]])
 
                 # Update existing tilt coefficients
-                angles.add(angle)
+                angles.add(angle_degrees)
 
-        if hands_coordinates:
+        if len(hands_coordinates) == 2:
             self.__clock_hands = ClockHands(hands_coordinates)
+
+    def __define_angle(self, x1, y1, x2, y2) -> float:
+        x_start, x_end = (
+            (x1, x2)
+            if abs(self.__center[0] - x1) < abs(self.__center[0] - x2)
+            else (x2, x1)
+        )
+        y_start, y_end = (
+            (y1, y2)
+            if abs(self.__center[1] - y1) < abs(self.__center[1] - y2)
+            else (y2, y1)
+        )
+        dx = x_end - x_start
+        dy = y_end - y_start
+
+        angle = np.arctan2(dx, -dy)
+        angle_degrees = np.round(np.degrees(angle), 3)
+        if angle_degrees < 0:
+            angle_degrees += 360.0
+
+        return angle_degrees
 
     def __shortest_distance(
         self,
