@@ -152,7 +152,7 @@ class Estimator:
 
         Returns
         -------
-        Return True if all number position is correct with specified maximum error.
+        Return True if all number position is correct with specified maximum error, and else otherwise.
 
         """
 
@@ -182,7 +182,25 @@ class Estimator:
             # Ни одна из стрелок
             return False
 
-    def __digits_in_circle(self, digits: ClockDigits, clock_circle: ClockCircle):
+    def __digits_in_circle(
+        self, digits: ClockDigits, clock_circle: ClockCircle
+    ) -> list:
+        """
+        Method that define which digits locate at circle.
+
+        Parameters
+        ----------
+        digits : ClockDigits
+            Clock digits object
+        clock_circle : ClockCircle
+            Clock circle object
+
+        Returns
+        -------
+        Return the list of digits that locate at circle.
+
+        """
+
         is_in_circle = lambda point: clock_circle.radius > np.sqrt(
             (point[0] - clock_circle.center_coordinates[0]) ** 2
             + (point[1] - clock_circle.center_coordinates[1]) ** 2
