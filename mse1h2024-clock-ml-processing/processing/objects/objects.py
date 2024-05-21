@@ -50,6 +50,7 @@ class ClockHands:
 
     def __init__(self, lines: list[tuple[int, int, int, int]]) -> None:
         """Initialization the ClockHands"""
+
         self._clock_hands = lines.copy()
         self._angles = {"hour": 0, "minute": 0}
 
@@ -139,6 +140,8 @@ class ClockHands:
 
 
 class ClockDigits:
+    """Class for keeping the information about clock digits"""
+
     def __init__(
         self,
         digits: list[
@@ -149,14 +152,31 @@ class ClockDigits:
             ]
         ],
     ) -> None:
+        """Initialization the ClockHands"""
+
         self._digits = digits.copy()
         self._angles = {}
 
     @property
     def angles(self) -> dict:
+        """This is a method that returns the digits angles relative to clock's center
+
+        Returns:
+            dict: digits angles relative to clock's center
+        """
+
         return self._angles.copy()
 
     def get_digit_angle(self, digit: int) -> float:
+        """This is a method that returns the digit angle relative to clock's center
+
+        Args:
+            digit (int): the number whose angle needs to be returned
+
+        Returns:
+            float: digit angle relative to clock's center
+        """
+
         return self._angles.get(digit)
 
     @property
@@ -174,6 +194,12 @@ class ClockDigits:
         return self._digits.copy()
 
     def define_angle(self, center: list[int, int]) -> None:
+        """This is a method of determining the angles of a digits relative to clock's center
+
+        Args:
+            center (list[int, int]): the center of the clock circle
+        """
+
         for digit in self._digits:
             digit_number = int(digit[1])
             ([x1, y1], [x2, y2], [x3, y3], [x4, y4]) = digit[0]
@@ -189,5 +215,11 @@ class ClockDigits:
             self._angles[digit_number] = angle_degrees
 
     def __str__(self) -> str:
+        """This is a method that returns the string representation of ClockDigits object
+
+        Returns:
+            str: string representation of ClockDigits object
+        """
+
         digit_list = [digit[1] for digit in self._digits]
         return f"digits = {digit_list}"
