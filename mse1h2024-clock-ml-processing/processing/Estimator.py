@@ -10,7 +10,7 @@ from processing.objects.objects import *
 
 
 class Estimator:
-    """__summary__"""
+    """A class evaluator for estimating drawing clock from 1 to 10 using machine learning and computer vision techniques."""
 
     def __init__(self) -> None:
         self.__clock_circle_extrator = ClockCircleExtractor()
@@ -22,6 +22,15 @@ class Estimator:
         }
 
     def __parse_time(self, time: tuple[int, int]) -> None:
+        """
+        Parse input time from backend.
+
+        Parameters
+        ----------
+        time : tuple[int, int]
+            Input time from backend in format [1-12, 0-55].
+
+        """
         self.__time["hour"] = time[0]
         self.__time["minute"] = 12 if time[1] == 0 else time[1] // 5
 
