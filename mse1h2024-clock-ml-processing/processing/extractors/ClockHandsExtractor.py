@@ -20,6 +20,8 @@ class ClockHandsExtractor:
         self.__min_clock_hand_length = None
 
     def __clear_previous(self):
+        """This method clears internal variables from previous recognition"""
+
         self.__clock_hands = None
 
     def __set_constants(self, center: list[int, int], radius: int) -> None:
@@ -116,6 +118,8 @@ class ClockHandsExtractor:
             self.__clock_hands = ClockHands(hands_coordinates)
 
     def __define_angle(self, x1, y1, x2, y2) -> float:
+        """This method is used to determine the angle of the hand relative to the center of the watch"""
+        
         x_start, x_end = (
             (x1, x2)
             if abs(self.__center[0] - x1) < abs(self.__center[0] - x2)
