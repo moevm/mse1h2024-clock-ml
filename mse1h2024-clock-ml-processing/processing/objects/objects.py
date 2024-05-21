@@ -9,6 +9,8 @@ class ClockCircle:
     def __init__(
         self, center_coordinates: Union[tuple, list, np.ndarray], radius: int
     ) -> None:
+        """Initialization the ClockCircle"""
+
         self._center_coordinates = (center_coordinates[0], center_coordinates[1])
         self._radius = radius
 
