@@ -23,7 +23,7 @@ class Estimator:
 
     def __parse_time(self, time: tuple[int, int]) -> None:
         """
-        Parse input time from backend.
+        Parse input time from backend and save it in self.time field.
 
         Parameters
         ----------
@@ -35,14 +35,20 @@ class Estimator:
         self.__time["minute"] = 12 if time[1] == 0 else time[1] // 5
 
     def estimate(self, image: np.array, time: tuple[int, int]) -> int:
-        """_summary_
+        """
+        Method for estimate the input image with clock and given time.
 
-        Args:
-            image (np.array): _description_
-            time (int, optional): _description_. Defaults to 0.
+        Parameters
+        ----------
+        image : np.array
+            Input image with a drawn clock.
+        time : tuple[int, int]
+            Input time from backend in format [1-12, 0-55].
 
-        Returns:
-            int: _description_
+        Returns
+        -------
+        Return the estimation result in [1-10].
+
         """
 
         self.__parse_time(time)
