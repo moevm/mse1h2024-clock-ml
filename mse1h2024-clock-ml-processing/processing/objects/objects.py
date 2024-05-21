@@ -60,10 +60,16 @@ class ClockHands:
         Returns:
            list[tuple[int, int, int, int]]: a list of 2 arrows that are the coordinates of the start and end (x1, y1, x2, y2)
         """
-        
+
         return self._clock_hands
 
     def get_clock_hands_count(self) -> int:
+        """This is a method that returns the clock hands count
+
+        Returns:
+            int: clock hands count
+        """
+        
         if self._clock_hands:
             return len(self._clock_hands)
         return 0
