@@ -1,5 +1,4 @@
 # import requirements
-import cv2
 import numpy as np
 
 # import project modules
