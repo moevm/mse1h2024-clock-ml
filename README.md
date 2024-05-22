@@ -22,7 +22,7 @@ https://drive.google.com/file/d/1Be8CDkx_xECEZLN5_Z8qnloZlTBDPw6h/view?usp=drive
 ## Итерация 4
 
 ### Презентация
-Презентация по итогам третьей итерации расположена по следующей ссылке: https://docs.google.com/presentation/d/1vLEs-0V8x0VS1tU5-oEKhI8xeEUQDjHU/edit#slide=id.p4
+Презентация по итогам четвертой итерации расположена по следующей ссылке: https://docs.google.com/presentation/d/1vLEs-0V8x0VS1tU5-oEKhI8xeEUQDjHU/edit#slide=id.p4
 
 ### Скринкасты
 Скринкаст расположен по следующей ссылке:
