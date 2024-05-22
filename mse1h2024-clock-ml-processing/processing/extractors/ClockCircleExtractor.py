@@ -12,20 +12,25 @@ class ClockCircleExtractor:
         self.__clock_circle = None
 
     def __clear_previous(self):
+        """Clear previous extracted clock circle"""
+
         self.__clock_circle = None
 
     def extract(self, image: np.array) -> ClockCircle | None:
         """
         Extract clock circle from the input image and save it in class instance.
-        Return the exctracted clock circle from image or None if not found
 
         Parameters
         ----------
         image : np.array
             Input image with clock
 
+        Returns
+        -------
+        Return the exctracted clock circle from image or None if not found
+
         """
-        
+
         self.__clear_previous()
 
         # convert to gray
@@ -64,7 +69,7 @@ class ClockCircleExtractor:
         finded_circles: list[list[int, int, int]] | list[ClockCircle],
         show: bool = True,
     ) -> np.array:
-        """i
+        """
         Draw the extracted circles on given image.
 
         Parameters
@@ -82,6 +87,7 @@ class ClockCircleExtractor:
             The result image in which the extracted circles are drawn
 
         """
+
         result_image = image.copy()
         for circle in finded_circles:
 
@@ -119,4 +125,3 @@ if __name__ == "__main__":
     circle_extractor = ClockCircleExtractor()
 
     clock_circle = circle_extractor.extract(image=image)
-    # ClockCircleExtractor.show_circles(image, [clock_circle])

@@ -1,5 +1,4 @@
 # import requirements
-import cv2
 import numpy as np
 
 # import project modules
@@ -11,7 +10,7 @@ from processing.objects.objects import *
 
 
 class Estimator:
-    """__summary__"""
+    """A class evaluator for estimating drawing clock from 1 to 10 using machine learning and computer vision techniques."""
 
     def __init__(self) -> None:
         self.__clock_circle_extrator = ClockCircleExtractor()
@@ -23,18 +22,33 @@ class Estimator:
         }
 
     def __parse_time(self, time: tuple[int, int]) -> None:
+        """
+        Parse input time from backend and save it in self.time field.
+
+        Parameters
+        ----------
+        time : tuple[int, int]
+            Input time from backend in format [1-12, 0-55].
+
+        """
         self.__time["hour"] = time[0]
         self.__time["minute"] = 12 if time[1] == 0 else time[1] // 5
 
     def estimate(self, image: np.array, time: tuple[int, int]) -> int:
-        """_summary_
+        """
+        Method for estimate the input image with clock and given time.
 
-        Args:
-            image (np.array): _description_
-            time (int, optional): _description_. Defaults to 0.
+        Parameters
+        ----------
+        image : np.array
+            Input image with a drawn clock.
+        time : tuple[int, int]
+            Input time from backend in format [1-12, 0-55].
 
-        Returns:
-            int: _description_
+        Returns
+        -------
+        Return the estimation result in [1-10].
+
         """
 
         self.__parse_time(time)
@@ -122,14 +136,24 @@ class Estimator:
         digits: ClockDigits,
         clock_hands: ClockHands,
     ) -> bool:
-        """_summary_
+        """
+        Method for checking given time and clock hands position with a specified error for hour and minute.
 
-        Args:
-            delta_angle_hour (int): _description_
-            delta_angle_minute (int): _description_
+        Parameters
+        ----------
+        delta_angle_hour : int
+            Specified error for hour value. So, the clock hour hand should be in (digits_position - delta_angle_hour, digits_position + delta_angle_hour) range.
+        delta_angle_minute : int
+            Specified error for minute value. So, the clock minute hand should be in (digits_position - delta_angle_minute, digits_position + delta_angle_minute) range.
+        digits : ClockDigits
+            ClockDigits object for define every clock number position and angle around circle.
+        clock_hands: ClockHands
+            ClockHands object for define drawn clock time.
 
-        Returns:
-            bool: _description_
+        Returns
+        -------
+        Return True if all number position is correct with specified maximum error, and False otherwise.
+
         """
 
         minute = self.__time["minute"]
@@ -158,7 +182,25 @@ class Estimator:
             # Ни одна из стрелок
             return False
 
-    def __digits_in_circle(self, digits: ClockDigits, clock_circle: ClockCircle):
+    def __digits_in_circle(
+        self, digits: ClockDigits, clock_circle: ClockCircle
+    ) -> list:
+        """
+        Method that define which digits locate at circle.
+
+        Parameters
+        ----------
+        digits : ClockDigits
+            Clock digits object
+        clock_circle : ClockCircle
+            Clock circle object
+
+        Returns
+        -------
+        Return the list of digits that locate at circle.
+
+        """
+
         is_in_circle = lambda point: clock_circle.radius > np.sqrt(
             (point[0] - clock_circle.center_coordinates[0]) ** 2
             + (point[1] - clock_circle.center_coordinates[1]) ** 2
@@ -173,7 +215,23 @@ class Estimator:
 
     def __digits_around_circumference(
         self, digits: ClockDigits, clock_circle: ClockCircle
-    ):
+    ) -> list:
+        """
+        Method that defines which digits are located around the circumference of the clock circle.
+
+        Parameters
+        ----------
+        digits : ClockDigits
+            Clock digits object
+        clock_circle : ClockCircle
+            Clock circle object
+
+        Returns
+        -------
+        list
+            List of digits that are located around the circumference of the clock circle.
+        """
+
         is_around_circumference = lambda point: clock_circle.radius / 3 <= np.sqrt(
             (point[0] - clock_circle.center_coordinates[0]) ** 2
             + (point[1] - clock_circle.center_coordinates[1]) ** 2
@@ -187,11 +245,20 @@ class Estimator:
         return around_circumference
 
     def __is_all_number_positions_correct(self, digits: ClockDigits) -> bool:
-        """_summary_
-
-        Returns:
-            bool: _description_
         """
+        Method that checks if all number positions are correct according to reference angles.
+
+        Parameters
+        ----------
+        digits : ClockDigits
+            Clock digits object
+
+        Returns
+        -------
+        bool
+            True if all number positions are correct, False otherwise.
+        """
+
         for digit, angle in digits.angles.items():
             if digit in REFERENCE_DIGITS_ANGLES:
                 if not CHECK_ANGLE(
