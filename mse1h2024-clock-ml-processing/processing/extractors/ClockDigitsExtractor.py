@@ -18,6 +18,8 @@ class ClockDigitsExtractor:
         self.__reader = easyocr.Reader(["en"], gpu=True)
 
     def __clear_previous(self):
+        """This method clears internal variables from previous recognition"""
+        
         self.__digits = None
         self.__boundaries = list()
 
@@ -37,20 +39,13 @@ class ClockDigitsExtractor:
         self.__clear_previous()
 
         self.__boundaries = self.__reader.detect(
-            # img=image,
-            # optimal_num_chars=2,
-            # text_threshold=0.1,
-            # height_ths=0.1,
-            # width_ths=0.1,
-            # ycenter_ths=0.1,
-            # add_margin=0.23
             img=image,
             text_threshold=0.5,
             link_threshold=0.8,
             ycenter_ths=0.2,
             height_ths=0.1,
             width_ths=0.1,
-            add_margin=0.23,
+            add_margin=0.1,
         )[0][0]
 
         return self.__boundaries if self.__boundaries else None
@@ -69,12 +64,13 @@ class ClockDigitsExtractor:
             image=image,
             allowlist="0123456789",
             decoder="beamsearch",
+            min_size=10,
             text_threshold=0.5,
             link_threshold=0.8,
             ycenter_ths=0.2,
             height_ths=0.1,
             width_ths=0.1,
-            add_margin=0.23,
+            add_margin=0.1,
         )
         self.__digits = ClockDigits(digits=extracted_digits)
 
